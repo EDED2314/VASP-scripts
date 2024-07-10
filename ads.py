@@ -41,6 +41,25 @@ def cleanUp():
             os.remove(name)
 
 
+def replacePOTCARfromHtoN():
+    fileNames = os.listdir()
+    N_folders = []
+    for name in fileNames:
+        if os.path.isdir(name):
+            if "N" in name:
+                N_folders.append(name)
+
+    for folder in N_folders:
+        os.chdir(folder)
+        simFolders = os.listdir()
+        for sim in simFolders:
+            current_potcar_path = os.path.join(sim, "POTCAR")
+            shutil.copy("../POTCAR", current_potcar_path)
+            print(f"Replaced POTCAR in {sim}")
+
+        os.chdir("..")
+
+
 def generateSimulationFolders(fileName: str):
     # ex:f"POSCAR_H2O_Vac_{symbol}{index}"
     # ex:f"POSCAR_H2_above_{symbol}{index}"
@@ -61,12 +80,15 @@ def generateSimulationFolders(fileName: str):
     os.chdir(moleculeAbove)
 
     if not vac:
-        if not orientation == "avg":
-            folderName = idc
-        else:
-            folderName = "Avg-" + idc
+        folderName = idc
     else:
         folderName = "V-" + idc
+
+    if orientation != "":
+        if orientation == "avg":
+            folderName = "Avg-" + idc
+        else:
+            folderName = folderName + "-" + orientation
 
     if os.path.exists(folderName):
         shutil.rmtree(folderName)
@@ -376,17 +398,24 @@ cleanUp()
 
 # EX 2
 # fileName = add_h2o_vacancy(
-#     slab.copy(), h2o.copy(), height_above_slab, "O", 0, "H_down", 0
+#     slab.copy(), h2o.copy(), height_above_slab, "O", 0, "coplanar", 270
 # )
 # print(fileName)
 # generateSimulationFolders(fileName)
 
+# EX 3
+# fileName = add_n2_vacancy(
+#     slab.copy(), n2.copy(), height_above_slab, "O", 0, "coplanar", 0
+# )
+# print(fileName)
+# generateSimulationFolders(fileName)
+replacePOTCARfromHtoN()
 
-for i in range(3):
-    fileName = add_h(slab.copy(), h.copy(), height_above_slab, "W", i)
-    print(f"----{i}----")
-    print(fileName)
-    generateSimulationFolders(fileName)
+# for i in range(3):
+#     fileName = add_h(slab.copy(), h.copy(), height_above_slab, "W", i)
+#     print(f"----{i}----")
+#     print(fileName)
+#     generateSimulationFolders(fileName)
 
 # for i in range(6):
 #     fileName = add_h(slab.copy(), h.copy(), height_above_slab, "O", i)
