@@ -1,7 +1,8 @@
+from typing import List
 from ase.io import read, write
 from ase.build import add_adsorbate
 from ase.build import molecule
-from ase import Atoms
+from ase import Atom, Atoms
 from pymatgen.io.vasp import Poscar, Kpoints
 
 import os
@@ -21,7 +22,8 @@ class bcolors:
     UNDERLINE = "\033[4m"
 
 
-slab = read("../001_WO3/CONTCAR")
+slab = read("CNST_CONTCAR_WO3")
+emptyCell = read("CNST_CONTCAR_EMPTY")
 
 
 # Create the H2O molecule
@@ -97,7 +99,7 @@ def generateSimulationFolders(fileName: str):
     os.chdir("..")
 
     # template directory containing KPOINTS INCAR and POT and job.slurm
-    from_directory = "./W001"
+    from_directory = "./templates_W001"
     to_directory = f"./{moleculeAbove}/{folderName}"
     copy_tree(from_directory, to_directory)
 
@@ -131,12 +133,15 @@ def generateSimulationFolders(fileName: str):
 
 
 def genKpoints(fileName: str):
-    return
-    poscar = Poscar.from_file(fileName)
-    structure = poscar.structure
-    kpoints = Kpoints.automatic_density(structure, kppa=1000)
-    newName = fileName.replace("POSCAR_", "")
-    kpoints.write_file(f"KPOINTS_{newName}")
+    try:
+        poscar = Poscar.from_file(fileName)
+        structure = poscar.structure
+        kpoints = Kpoints.automatic_density(structure, kppa=1000)
+        newName = fileName.replace("POSCAR_", "")
+        kpoints.write_file(f"KPOINTS_{newName}")
+    except:
+        print("there was an error generating the kpoints file for " + fileName)
+        return
 
 
 def find_average_of_symbol(symbol, idxs):
@@ -381,6 +386,49 @@ def add_n2_vacancy(
     return fileName
 
 
+def generateAdsorbentInVacuum(empty, molecule_or_atom, symbol: str):
+    fileName = f"POSCAR_{symbol}"
+    molecule_or_atom.center()
+
+    empty.pop(0)
+    empty += molecule_or_atom
+
+    empty.center()
+
+    write(fileName, empty, format="vasp")
+
+    from_directory = "templates_adsorbate"
+    to_directory = f"./adsorbates/{symbol}"
+
+    if os.path.exists(to_directory):
+        shutil.rmtree(to_directory)
+    os.mkdir(to_directory)
+
+    for template in os.listdir(from_directory):
+        if f"POTCAR_{symbol.upper()}" == template:
+            shutil.copyfile(
+                os.path.join(from_directory, template),
+                os.path.join(to_directory, f"POTCAR_{symbol.upper()}"),
+            )
+        if f"INCAR_{symbol.upper()}" == template:
+            shutil.copyfile(
+                os.path.join(from_directory, template),
+                os.path.join(to_directory, f"INCAR_{symbol.upper()}"),
+            )
+        if template == "KPOINTS":
+            shutil.copyfile(
+                os.path.join(from_directory, template),
+                os.path.join(to_directory, "KPOINTS"),
+            )
+        if template == "gpu.slurm":
+            shutil.copyfile(
+                os.path.join(from_directory, template),
+                os.path.join(to_directory, "gpu.slurm"),
+            )
+
+    os.rename(fileName, os.path.join(to_directory, fileName))
+
+
 height_above_slab = 2.2
 triangle_1 = [0, 1, 4]
 triangle_2 = [2, 3, 5]
@@ -409,7 +457,13 @@ cleanUp()
 # )
 # print(fileName)
 # generateSimulationFolders(fileName)
-replacePOTCARfromHtoN()
+# replacePOTCARfromHtoN()
+
+# Ex 4
+# generateAdsorbentInVacuum(emptyCell.copy(), h2o, "H2O")
+# generateAdsorbentInVacuum(emptyCell.copy(), h, "H")
+# generateAdsorbentInVacuum(emptyCell.copy(), n2, "N2")
+
 
 # for i in range(3):
 #     fileName = add_h(slab.copy(), h.copy(), height_above_slab, "W", i)
