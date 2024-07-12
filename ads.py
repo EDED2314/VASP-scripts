@@ -25,6 +25,7 @@ class bcolors:
 
 slab = read("CNST_CONTCAR_WO3")
 emptyCell = read("CNST_CONTCAR_EMPTY")
+OUTPUT_DIR = "POSTOUTPUT"
 
 
 # Create the H2O molecule
@@ -196,6 +197,46 @@ def remove_atom_at_position(slabb, x, y, atom_type):
     slabb.pop(atom.index)
 
 
+def getSurfaceAtoms(symbol, index):
+    available_atoms = []
+    for atom in slab:
+        if atom.symbol == symbol:
+            available_atoms.append(atom)
+
+    if len(available_atoms) == 0:
+        print(f'{bcolors.FAIL}Requested symbol: "{symbol}", is not found{bcolors.ENDC}')
+        raise ValueError
+
+    atom_list = []
+    z_max = max([atom.position[2] for atom in available_atoms])
+    for atom in available_atoms:
+        if abs(atom.position[2] - z_max) < 1e-1:
+            atom_list.append(atom)
+
+    if len(atom_list) <= index:
+        print(
+            f"{bcolors.FAIL}Requested atom index is greater than available atoms{bcolors.ENDC}"
+        )
+        print(f"{bcolors.FAIL}------{bcolors.ENDC}")
+        print(f"Symbol: {bcolors.OKGREEN}{symbol}{bcolors.ENDC}")
+        print(f"Length of atom list: {bcolors.OKGREEN}{len(atom_list)}{bcolors.ENDC}")
+        print(f"Requested index: {bcolors.OKGREEN}{index}{bcolors.ENDC}")
+        for atom in atom_list:
+            print(f"{bcolors.OKBLUE}{atom}{bcolors.ENDC}")
+        print(f"{bcolors.FAIL}------{bcolors.ENDC}")
+        raise IndexError
+
+    return atom_list
+
+
+def generateSlabVac(slab, symbol, index):
+    atom_list = getSurfaceAtoms(symbol, index)
+    x = atom_list[index].position[0]
+    y = atom_list[index].position[1]
+    remove_atom_at_position(slab, x, y, "O")
+    write("POSCAR", slab, format="vasp")
+
+
 def add_adsorbate_custom(
     slab,
     molecule,
@@ -216,37 +257,7 @@ def add_adsorbate_custom(
         y = overridePos[1]
     else:
         if len(idxs) == 0:
-            available_atoms = []
-            for atom in slab:
-                if atom.symbol == symbol:
-                    available_atoms.append(atom)
-
-            if len(available_atoms) == 0:
-                print(
-                    f'{bcolors.FAIL}Requested symbol: "{symbol}", is not found{bcolors.ENDC}'
-                )
-                raise ValueError
-
-            atom_list = []
-            z_max = max([atom.position[2] for atom in available_atoms])
-            for atom in available_atoms:
-                if abs(atom.position[2] - z_max) < 1e-1:
-                    atom_list.append(atom)
-
-            if len(atom_list) <= index:
-                print(
-                    f"{bcolors.FAIL}Requested atom index is greater than available atoms{bcolors.ENDC}"
-                )
-                print(f"{bcolors.FAIL}------{bcolors.ENDC}")
-                print(f"Symbol: {bcolors.OKGREEN}{symbol}{bcolors.ENDC}")
-                print(
-                    f"Length of atom list: {bcolors.OKGREEN}{len(atom_list)}{bcolors.ENDC}"
-                )
-                print(f"Requested index: {bcolors.OKGREEN}{index}{bcolors.ENDC}")
-                for atom in atom_list:
-                    print(f"{bcolors.OKBLUE}{atom}{bcolors.ENDC}")
-                print(f"{bcolors.FAIL}------{bcolors.ENDC}")
-                raise IndexError
+            atom_list = getSurfaceAtoms(symbol, index)
 
             x = atom_list[index].position[0]
             y = atom_list[index].position[1]
@@ -430,7 +441,31 @@ def generateAdsorbentInVacuum(empty, molecule_or_atom, symbol: str):
     os.rename(fileName, os.path.join(to_directory, fileName))
 
 
-def calculateDistancesForEachAtomPair(slab, symboll):
+# POST SIM ANALYSIS
+def adsorptionEnergy(OSZICAR_BOTH, OSZICAR_SURF, OSZICAR_ADS):
+    """
+    First param is for the oszicar of the surface and adsorbate sim, like WO3 vacancy plus H atom
+    Second param is the oszicar for the surface
+    Third is for the adsorbate
+    """
+    both = []
+    with open(f"{OUTPUT_DIR}/{OSZICAR_BOTH}") as f:
+        both = f.readlines()
+
+    surf = []
+    with open(f"{OUTPUT_DIR}/{OSZICAR_SURF}") as f:
+        surf = f.readlines()
+
+    ads = []
+    with open(f"{OUTPUT_DIR}/{OSZICAR_ADS}") as f:
+        ads = f.readlines()
+
+    # lastLineBoth = both[-1]
+    # lastLineSurf = surf[-1]
+    # lastLineAds = ads[-1]
+
+
+def calculateDistancesForEachAtomPair(slab, symbol1, symbol2, radius1=0.0, radius2=0.0):
     datas = []
     atomss = []
     atomNum = 0
@@ -448,25 +483,27 @@ def calculateDistancesForEachAtomPair(slab, symboll):
             data["sym2"] = slab[k].symbol
             data["idx1"] = slab[i].index
             data["idx2"] = slab[k].index
-            if slab[k].symbol == symboll or slab[i].symbol == symboll:
+            if (slab[k].symbol == symbol1 and slab[i].symbol == symbol2) or (
+                slab[k].symbol == symbol2 and slab[i].symbol == symbol1
+            ):
                 datas.append(data)
 
-    # final = []
-    # for i in range(len(datas)):
-    #     for k in range(i + 1, len(datas)):
-    #         if not (
-    #             datas[i]["dis"] == datas[k]["dis"]
-    #             and datas[i]["dis"] == datas[k]["dis"]
-    #         ):
-    #             final.append(datas[i])
+    dis = []
+    for _, pair in enumerate(datas):
+        dis.append(pair["dis"] - (radius1 + radius2))
+    dis.sort()
 
-    return datas
+    return datas, dis
 
 
 triangle_1 = [0, 1, 4]
 triangle_2 = [2, 3, 5]
 
 cleanUp()
+
+# EX 0
+generateSlabVac(slab.copy(), "O", 0)
+
 
 # EX 1
 # fileName = add_h(slab.copy(), h.copy(), height_above_slab, "O", 0, pos=(1,2))
@@ -499,13 +536,15 @@ cleanUp()
 
 # EX 5
 # slab = read("backupPSCR", format="vasp")
-# print(slab.get_number_of_atoms())
-# data = calculateDistancesForEachAtomPair(slab.copy(), "H")
+# data, dis = calculateDistancesForEachAtomPair(slab.copy(), "N", "W", 1.37, 0.92)
+# data, dis = calculateDistancesForEachAtomPair(slab.copy(), "O", "H", 0.73, 0.53)
 # print(data)
-# for _, pair in enumerate(data):
-#     if pair["dis"] < 1:
-#         print(pair)
+# print(dis[0])
+# print(dis[1])
+# print(dis[2])
 
+# EX 6
+adsorptionEnergy("OSZICAR_N2_WO3_V", "OSZICAR_WO3_V", "OSZICAR_N2")
 
 # for i in range(3):
 #     fileName = add_h(slab.copy(), h.copy(), height_above_slab, "W", i)
