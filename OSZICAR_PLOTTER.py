@@ -4,15 +4,6 @@
 
 import pylab as p
 
-info = "T  : is the current temperature.\n\
-E  : is the total free energy (including the kinetic energy of the ions and the energy of the Nosé thermostat).\n\
-F  : is the total free energy  (at this point the energy of the reference atom has been subtracted).\n\
-E0 : is the energy for sigma-> 0 .\n\
-EK : is the kinetic energy.\n\
-SP : is the potential energy of the Nosé thermostat.\n\
-SK : is the corresponding kinetic energy.\n\n\
-   more infos : https://cms.mpi.univie.ac.at/vasp/vasp/stdout_OSZICAR_file.html\n"
-
 ff = " as a function of MD Steps"
 
 """
@@ -78,13 +69,8 @@ def PLOT_DATA(arr, Xplot, Yplot):
     p.show()
 
 
-##
-
-
-OSZ = OSZICAR_READ("OSZICAR_H")
-# print(OSZ)
-print(info)
-PLOT = True
+ending = input("File ending\n>>>")
+OSZ = OSZICAR_READ("OSZICAR_" + ending)
 
 Xplot = "Steps"
 Yplot = input("Yplot (F, E0, dE ) > ")
