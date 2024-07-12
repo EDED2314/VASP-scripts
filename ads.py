@@ -460,9 +460,31 @@ def adsorptionEnergy(OSZICAR_BOTH, OSZICAR_SURF, OSZICAR_ADS):
     with open(f"{OUTPUT_DIR}/{OSZICAR_ADS}") as f:
         ads = f.readlines()
 
-    # lastLineBoth = both[-1]
-    # lastLineSurf = surf[-1]
+    lastLineBoth = both[-1]
+    lastLineSurf = surf[-1]
+
+    both = lastLineBoth.split()
+    both.pop(5)
+    both[5] = "dE="
+    both[6] = both[6].strip("=")
+
+    surf = lastLineSurf.split()
+    surf.pop(5)
+    surf[5] = "dE="
+    surf[6] = surf[6].strip("=")
+
+    # ads = lastLineSurf.split()
+    # ads.pop(5)
+    # ads[5] = "dE="
+    # ads[6] = ads[6].strip("=")
+
     # lastLineAds = ads[-1]
+    energyBoth = float(both[2])
+    energySurf = float(surf[2])
+    # energyAds = float(ads[2])
+    energyAds = 3.21
+
+    return energyBoth - (energySurf + energyAds)
 
 
 def calculateDistancesForEachAtomPair(slab, symbol1, symbol2, radius1=0.0, radius2=0.0):
@@ -534,6 +556,7 @@ generateSlabVac(slab.copy(), "O", 0)
 # generateAdsorbentInVacuum(emptyCell.copy(), h, "H")
 # generateAdsorbentInVacuum(emptyCell.copy(), n2, "N2")
 
+
 # EX 5
 # slab = read("backupPSCR", format="vasp")
 # data, dis = calculateDistancesForEachAtomPair(slab.copy(), "N", "W", 1.37, 0.92)
@@ -544,7 +567,9 @@ generateSlabVac(slab.copy(), "O", 0)
 # print(dis[2])
 
 # EX 6
-adsorptionEnergy("OSZICAR_N2_WO3_V", "OSZICAR_WO3_V", "OSZICAR_N2")
+# adsorptionEnergy("OSZICAR_N2_WO3_V", "OSZICAR_WO3_V", "OSZICAR_N2")
+energy = adsorptionEnergy("OSZICAR_H_WO3", "OSZICAR_WO3", "OSZICAR_H")
+print(energy)
 
 # for i in range(3):
 #     fileName = add_h(slab.copy(), h.copy(), height_above_slab, "W", i)
