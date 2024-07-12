@@ -315,7 +315,16 @@ def add_h2(slab, h2, height, symbol, index, dis_x=0, dis_y=0, pos=None):
 
 # Function to add H2O in different orientations
 def add_h2o_vacancy(
-    slab, h2o, height, symbol, index, orientation="H2_down", rotation=0, pos=None
+    slab,
+    h2o,
+    height,
+    symbol,
+    index,
+    orientation="H2_down",
+    rotation=0,
+    pos=None,
+    dis_x=0,
+    dis_y=0,
 ):
     # 4 -> [4] is the orientation,  2-3 characters
     fileName = f"POSCAR_H2O_Vac_{symbol}{index}_"
@@ -360,7 +369,15 @@ def add_h2o_vacancy(
             fileName += "X"
 
     add_adsorbate_custom(
-        slab, h2o, height, symbol, index, vacancy=True, overridePos=pos
+        slab,
+        h2o,
+        height,
+        symbol,
+        index,
+        vacancy=True,
+        overridePos=pos,
+        displacement_x=dis_x,
+        displacement_y=dis_y,
     )
     write(fileName, slab, format="vasp")
     genKpoints(fileName)
@@ -405,7 +422,8 @@ def generateAdsorbentInVacuum(empty, molecule_or_atom, symbol: str):
     empty.pop(0)
     empty += molecule_or_atom
 
-    empty.center(vacuum=20.0)
+    # empty.center(vacuum=20.0)
+    empty.center()
 
     write(fileName, empty, format="vasp")
 
@@ -518,13 +536,14 @@ def calculateDistancesForEachAtomPair(slab, symbol1, symbol2, radius1=0.0, radiu
     return datas, dis
 
 
+height_above_slab = 2.2
 triangle_1 = [0, 1, 4]
 triangle_2 = [2, 3, 5]
 
 cleanUp()
 
 # EX 0
-generateSlabVac(slab.copy(), "O", 0)
+# generateSlabVac(slab.copy(), "O", 0)
 
 
 # EX 1
@@ -537,9 +556,7 @@ generateSlabVac(slab.copy(), "O", 0)
 
 
 # EX 2
-# fileName = add_h2o_vacancy(
-#     slab.copy(), h2o.copy(), height_above_slab, "O", 0, "coplanar", 270
-# )
+# fileName = add_h2o_vacancy(slab.copy(), h2o.copy(), height_above_slab, "O", 0, "O_down")
 # print(fileName)
 # generateSimulationFolders(fileName)
 
@@ -555,12 +572,18 @@ generateSlabVac(slab.copy(), "O", 0)
 # generateAdsorbentInVacuum(emptyCell.copy(), h2o, "H2O")
 # generateAdsorbentInVacuum(emptyCell.copy(), h, "H")
 # generateAdsorbentInVacuum(emptyCell.copy(), n2, "N2")
+# generateAdsorbentInVacuum(emptyCell.copy(), h2, "H2")
 
 
 # EX 5
-# slab = read("backupPSCR", format="vasp")
+# slab = read("CNST_CONTCAR_N2_WO3_V_TEST", format="vasp")
 # data, dis = calculateDistancesForEachAtomPair(slab.copy(), "N", "W", 1.37, 0.92)
+# slab = read("CNST_CONTCAR_H_WO3_TEST", format="vasp")
 # data, dis = calculateDistancesForEachAtomPair(slab.copy(), "O", "H", 0.73, 0.53)
+# slab = read("CNST_CONTCAR_N2_WO3_V_TEST", format="vasp")
+# data, dis = calculateDistancesForEachAtomPair(slab.copy(), "N", "W")
+# slab = read("CNST_CONTCAR_H_WO3_TEST", format="vasp")
+# data, dis = calculateDistancesForEachAtomPair(slab.copy(), "O", "H")
 # print(data)
 # print(dis[0])
 # print(dis[1])
@@ -568,8 +591,8 @@ generateSlabVac(slab.copy(), "O", 0)
 
 # EX 6
 # adsorptionEnergy("OSZICAR_N2_WO3_V", "OSZICAR_WO3_V", "OSZICAR_N2")
-energy = adsorptionEnergy("OSZICAR_H_WO3", "OSZICAR_WO3", "OSZICAR_H")
-print(energy)
+# energy = adsorptionEnergy("OSZICAR_H_WO3", "OSZICAR_WO3", "OSZICAR_H")
+# print(energy)
 
 # for i in range(3):
 #     fileName = add_h(slab.copy(), h.copy(), height_above_slab, "W", i)
