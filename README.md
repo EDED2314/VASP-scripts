@@ -1,6 +1,6 @@
 # VASP Scripts
 ## Features
 - Initial structure gen
-- OSZICAR plotter (Y v.s. steps)
+- Post data analysis (OSZICAR plotter (Y v.s. steps), adsorption energy)
 - more to come
 
