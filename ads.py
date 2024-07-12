@@ -4,6 +4,7 @@ from ase.build import add_adsorbate
 from ase.build import molecule
 from ase import Atom, Atoms
 from pymatgen.io.vasp import Poscar, Kpoints
+from scipy.spatial.distance import euclidean
 
 import os
 from distutils.dir_util import copy_tree
@@ -393,7 +394,7 @@ def generateAdsorbentInVacuum(empty, molecule_or_atom, symbol: str):
     empty.pop(0)
     empty += molecule_or_atom
 
-    empty.center()
+    empty.center(vacuum=20.0)
 
     write(fileName, empty, format="vasp")
 
@@ -429,7 +430,39 @@ def generateAdsorbentInVacuum(empty, molecule_or_atom, symbol: str):
     os.rename(fileName, os.path.join(to_directory, fileName))
 
 
-height_above_slab = 2.2
+def calculateDistancesForEachAtomPair(slab, symboll):
+    datas = []
+    atomss = []
+    atomNum = 0
+
+    for i in range(len(slab)):
+        for k in range(i + 1, len(slab)):
+            # print(slab[i], slab[k])
+            data = {}
+
+            point1 = slab[i].position
+            point2 = slab[k].position
+
+            data["dis"] = euclidean(point1, point2)
+            data["sym1"] = slab[i].symbol
+            data["sym2"] = slab[k].symbol
+            data["idx1"] = slab[i].index
+            data["idx2"] = slab[k].index
+            if slab[k].symbol == symboll or slab[i].symbol == symboll:
+                datas.append(data)
+
+    # final = []
+    # for i in range(len(datas)):
+    #     for k in range(i + 1, len(datas)):
+    #         if not (
+    #             datas[i]["dis"] == datas[k]["dis"]
+    #             and datas[i]["dis"] == datas[k]["dis"]
+    #         ):
+    #             final.append(datas[i])
+
+    return datas
+
+
 triangle_1 = [0, 1, 4]
 triangle_2 = [2, 3, 5]
 
@@ -463,6 +496,15 @@ cleanUp()
 # generateAdsorbentInVacuum(emptyCell.copy(), h2o, "H2O")
 # generateAdsorbentInVacuum(emptyCell.copy(), h, "H")
 # generateAdsorbentInVacuum(emptyCell.copy(), n2, "N2")
+
+# EX 5
+# slab = read("backupPSCR", format="vasp")
+# print(slab.get_number_of_atoms())
+# data = calculateDistancesForEachAtomPair(slab.copy(), "H")
+# print(data)
+# for _, pair in enumerate(data):
+#     if pair["dis"] < 1:
+#         print(pair)
 
 
 # for i in range(3):
