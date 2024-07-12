@@ -64,7 +64,7 @@ def replacePOTCARfromHtoN():
         os.chdir("..")
 
 
-def generateSimulationFolders(fileName: str):
+def generateSimulationFolders(fileName: str, customName=""):
     # ex:f"POSCAR_H2O_Vac_{symbol}{index}"
     # ex:f"POSCAR_H2_above_{symbol}{index}"
     # ex:f"POSCAR_N2_Vac_{symbol}{index}_"
@@ -78,10 +78,15 @@ def generateSimulationFolders(fileName: str):
     if len(tmp) == 5:
         orientation = tmp[4]
 
-    if not os.path.exists(moleculeAbove):
-        os.mkdir(moleculeAbove)
+    if len(customName) == 0:
+        mainDirectoryName = moleculeAbove
+    else:
+        mainDirectoryName = customName
 
-    os.chdir(moleculeAbove)
+    if not os.path.exists(mainDirectoryName):
+        os.mkdir(mainDirectoryName)
+
+    os.chdir(mainDirectoryName)
 
     if not vac:
         folderName = idc
@@ -102,12 +107,12 @@ def generateSimulationFolders(fileName: str):
 
     # template directory containing KPOINTS INCAR and POT and job.slurm
     from_directory = "./templates_W001"
-    to_directory = f"./{moleculeAbove}/{folderName}"
+    to_directory = f"./{mainDirectoryName}/{folderName}"
     copy_tree(from_directory, to_directory)
 
     os.rename(fileName, f"./{to_directory}/POSCAR")
 
-    os.chdir(moleculeAbove)
+    os.chdir(mainDirectoryName)
     os.chdir(folderName)
 
     replacementString = "Et2133JB"  # 2 4 2
@@ -480,6 +485,7 @@ def adsorptionEnergy(OSZICAR_BOTH, OSZICAR_SURF, OSZICAR_ADS):
 
     lastLineBoth = both[-1]
     lastLineSurf = surf[-1]
+    lastLineAds = ads[-1]
 
     both = lastLineBoth.split()
     both.pop(5)
@@ -491,28 +497,22 @@ def adsorptionEnergy(OSZICAR_BOTH, OSZICAR_SURF, OSZICAR_ADS):
     surf[5] = "dE="
     surf[6] = surf[6].strip("=")
 
-    # ads = lastLineSurf.split()
-    # ads.pop(5)
-    # ads[5] = "dE="
-    # ads[6] = ads[6].strip("=")
+    ads = lastLineAds.split()
+    ads.pop(5)
+    ads[5] = "dE="
+    ads[6] = ads[6].strip("=")
 
-    # lastLineAds = ads[-1]
     energyBoth = float(both[2])
     energySurf = float(surf[2])
-    # energyAds = float(ads[2])
-    energyAds = 3.21
+    energyAds = float(ads[2])
 
     return energyBoth - (energySurf + energyAds)
 
 
 def calculateDistancesForEachAtomPair(slab, symbol1, symbol2, radius1=0.0, radius2=0.0):
     datas = []
-    atomss = []
-    atomNum = 0
-
     for i in range(len(slab)):
         for k in range(i + 1, len(slab)):
-            # print(slab[i], slab[k])
             data = {}
 
             point1 = slab[i].position
@@ -547,12 +547,19 @@ cleanUp()
 
 
 # EX 1
+# newSlab = slab.copy()
+# fileName = add_h(newSlab, h.copy(), 0.60, "O", 0, dis_x=0, dis_y=0.60)
+# fileName = add_h(newSlab, h.copy(), 0.60, "O", 0, dis_x=0, dis_y=-0.60)
+# print(fileName)
+# generateSimulationFolders(fileName, "H2O-2H-WO3-V")
+
 # fileName = add_h(slab.copy(), h.copy(), height_above_slab, "O", 0, pos=(1,2))
 # print(fileName)
+# generateSimulationFolders(fileName, )
 
 # fileName = add_h(slab.copy(), h.copy(), height_above_slab, "O", 0, idxs=triangle_2)
 # print(fileName)
-# generateSimulationFolders(fileName)
+# generateSimulationFolders(fileName, )
 
 
 # EX 2
