@@ -519,6 +519,22 @@ def adsorptionEnergy(
     return energyBoth - (energySurf + energyAds)
 
 
+def analyzeOutputOfFolder(POST_DIRECTORY, name_label="name", energy_label="energy"):
+    datas = []
+    for postFile in os.listdir(POST_DIRECTORY):
+        data = {}
+        data[name_label] = postFile.replace("OSZICAR_", "")
+        data[energy_label] = adsorptionEnergy(
+            postFile,
+            "OSZICAR_WO3",
+            "OSZICAR_H2",
+            customPathBoth=POST_DIRECTORY,
+            adsMulti=0.5,
+        )
+        datas.append(data)
+    return datas
+
+
 def calculateDistancesForEachAtomPair(slab, symbol1, symbol2, radius1=0.0, radius2=0.0):
     datas = []
     for i in range(len(slab)):
@@ -610,25 +626,11 @@ cleanUp()
 
 
 # ex 6.1
-def analyzeOutputOfFolder(POST_DIRECTORY):
-    datas = []
-    for postFile in os.listdir(POST_DIRECTORY):
-        data = {}
-        data["name"] = postFile.replace("OSZICAR_", "")
-        data["energy"] = adsorptionEnergy(
-            postFile,
-            "OSZICAR_WO3",
-            "OSZICAR_H2",
-            customPathBoth=POST_DIRECTORY,
-            adsMulti=0.5,
-        )
-        datas.append(data)
-    return datas
-
-
 H_post = "POSTOUTPUT/H_POST"
 df = pd.DataFrame(analyzeOutputOfFolder(H_post))
-df.to_csv("data/adsorption_energy")
+df = df.sort_values("name")
+df.to_csv("data/adsorption_energy.csv")
+df.to_html("data/H_atom_adsorption_energy.html")
 print(df)
 
 # # ex 6.2
