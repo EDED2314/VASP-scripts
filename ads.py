@@ -23,8 +23,6 @@ class bcolors:
     UNDERLINE = "\033[4m"
 
 
-slab = read("CNST_CONTCAR_WO3")
-emptyCell = read("CNST_CONTCAR_EMPTY")
 OUTPUT_DIR = "POSTOUTPUT"
 
 
@@ -422,15 +420,17 @@ def add_n2_vacancy(
 
 def generateAdsorbentInVacuum(empty, molecule_or_atom, symbol: str):
     fileName = f"POSCAR_{symbol}"
-    molecule_or_atom.center()
+    # molecule_or_atom.center()
+    molecule_or_atom.center(vacuum=5.0)
 
-    empty.pop(0)
-    empty += molecule_or_atom
+    # empty.pop(0)
+    # empty += molecule_or_atom
 
     # empty.center(vacuum=20.0)
-    empty.center()
+    # empty.center()
 
-    write(fileName, empty, format="vasp")
+    write(fileName, molecule_or_atom, format="vasp")
+    # write(fileName, empty, format="vasp")
 
     from_directory = "templates_adsorbate"
     to_directory = f"./adsorbates/{symbol}"
@@ -536,6 +536,8 @@ def calculateDistancesForEachAtomPair(slab, symbol1, symbol2, radius1=0.0, radiu
     return datas, dis
 
 
+slab = read("CNST_CONTCAR_WO3")
+emptyCell = read("CNST_CONTCAR_EMPTY")
 height_above_slab = 2.2
 triangle_1 = [0, 1, 4]
 triangle_2 = [2, 3, 5]
@@ -547,11 +549,10 @@ cleanUp()
 
 
 # EX 1
-# newSlab = slab.copy()
-# fileName = add_h(newSlab, h.copy(), 0.60, "O", 0, dis_x=0, dis_y=0.60)
-# fileName = add_h(newSlab, h.copy(), 0.60, "O", 0, dis_x=0, dis_y=-0.60)
+# newSlab = read("CNST_CONTCAR_H_WO3_TEST")
+# fileName = add_h(newSlab, h.copy(), -0.6, "O", 0, dis_x=0, dis_y=-0.60)
 # print(fileName)
-# generateSimulationFolders(fileName, "H2O-2H-WO3-V")
+# generateSimulationFolders(fileName, "2_H")
 
 # fileName = add_h(slab.copy(), h.copy(), height_above_slab, "O", 0, pos=(1,2))
 # print(fileName)
@@ -575,12 +576,11 @@ cleanUp()
 # generateSimulationFolders(fileName)
 # replacePOTCARfromHtoN()
 
-# Ex 4
-# generateAdsorbentInVacuum(emptyCell.copy(), h2o, "H2O")
+# Ex 4t
+generateAdsorbentInVacuum(emptyCell.copy(), h2o, "H2O")
 # generateAdsorbentInVacuum(emptyCell.copy(), h, "H")
 # generateAdsorbentInVacuum(emptyCell.copy(), n2, "N2")
 # generateAdsorbentInVacuum(emptyCell.copy(), h2, "H2")
-
 
 # EX 5
 # slab = read("CNST_CONTCAR_N2_WO3_V_TEST", format="vasp")
