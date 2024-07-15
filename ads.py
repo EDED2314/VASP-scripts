@@ -11,6 +11,9 @@ from distutils.dir_util import copy_tree
 import shutil
 import pandas as pd
 
+from ase.visualize.plot import plot_atoms
+import matplotlib.pyplot as plt
+
 
 class bcolors:
     HEADER = "\033[95m"
@@ -624,19 +627,39 @@ cleanUp()
 
 # EX 6
 
-
 # ex 6.1
-H_post = "POSTOUTPUT/H_POST"
-df = pd.DataFrame(analyzeOutputOfFolder(H_post))
-df = df.sort_values("name")
-df.to_csv("data/adsorption_energy.csv")
-df.to_html("data/H_atom_adsorption_energy.html")
-print(df)
+# H_post = "POSTOUTPUT/H_POST"
+# df = pd.DataFrame(
+#     analyzeOutputOfFolder(H_post, "Atom H atom on top of", "Adsorption Energy (eV)")
+# )
+# df = df.sort_values("Atom H atom on top of")
+# df.to_csv("data/adsorption_energy.csv")
+# df.to_html("data/H_atom_adsorption_energy.html")
+# print(df)
 
 # # ex 6.2
 # energy = adsorptionEnergy("OSZICAR_H_WO3", "OSZICAR_WO3", "OSZICAR_H2")
 # energy = adsorptionEnergy("OSZICAR_N2_WO3_V", "OSZICAR_WO3_V", "OSZICAR_N2")
 # print(energy)
+
+
+# EX 7 - visualize
+
+# read(format="vasp-xdatcar")
+
+fig, ax = plt.subplots()
+plot_atoms(slab, ax, rotation="0x,20y,90z")
+ax.set_axis_off()
+
+
+output_file = "data/slab_visualization.png"
+plt.savefig(output_file, bbox_inches="tight", pad_inches=0.1, dpi=300)
+plt.close(fig)
+
+print(f"Slab visualization saved to {output_file}")
+
+
+# EX8
 
 # for i in range(3):
 #     fileName = add_h(slab.copy(), h.copy(), height_above_slab, "W", i)
