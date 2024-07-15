@@ -16,7 +16,7 @@ for a static run dE is the entropy multiplied by  sigma.
 """
 
 OSZ_Labels = {
-    "Steps": [0, " Molecular Dynamic Steps ", " (time) "],
+    "Steps": [0, "Step ", " (time) "],
     "F": [1, "Total Free Energy", " (eV) ", "Free Energy" + ff],
     "E0": [2, "Energy sigma -> 0", " (eV) ", "Energy" + ff],
     "dE": [3, "Change in total energy", " (eV) ", "Free Energy" + ff],
@@ -33,12 +33,13 @@ def OSZICAR_READ(fileName):
         if "F=" in f[i]:
             info = f[i].split()
             step = int(info[0])
-            if step < 10:
+            if step < 5:
+                # this causes some errors for sims that have less than 5 steps
                 continue
             info.pop(5)
             info[5] = "dE="
             info[6] = info[6].strip("=")
-            print(info)
+            # print(info)
             if len(DATA) == 0:
                 DATA = p.array([info[::2]], dtype=float)
             else:
@@ -71,6 +72,7 @@ def PLOT_DATA(arr, Xplot, Yplot):
 
 ending = input("File ending\n>>>")
 OSZ = OSZICAR_READ("OSZICAR_" + ending)
+# print(OSZ)
 
 Xplot = "Steps"
 Yplot = input("Yplot (F, E0, dE ) > ")
