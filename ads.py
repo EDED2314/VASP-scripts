@@ -607,19 +607,25 @@ cleanUp()
 # EX 6
 "energyBoth - (energySurf + energyAds)"
 
-H_post = "POSTOUTPUT/H_POST"
-datas = []
-for postFile in os.listdir(H_post):
-    data = {}
-    data["name"] = postFile.replace("OSZICAR_", "")
-    data["energy"] = adsorptionEnergy(
-        postFile, "OSZICAR_WO3", "OSZICAR_H", customPathBoth=H_post
-    )
-    datas.append(data)
 
+# ex 6.1
+def analyzeOutputOfFolder(POST_DIRECTORY):
+    datas = []
+    for postFile in os.listdir(POST_DIRECTORY):
+        data = {}
+        data["name"] = postFile.replace("OSZICAR_", "")
+        data["energy"] = adsorptionEnergy(
+            postFile, "OSZICAR_WO3", "OSZICAR_H", customPathBoth=POST_DIRECTORY
+        )
+        datas.append(data)
+    return datas
+
+
+H_post = "POSTOUTPUT/H_POST"
+datas = analyzeOutputOfFolder(H_post)
 print(datas)
 
-
+# ex 6.2
 # energy1 = adsorptionEnergy("OSZICAR_N2_WO3_V", "OSZICAR_WO3_V", "OSZICAR_N2")
 # energy = adsorptionEnergy("OSZICAR_H_WO3", "OSZICAR_WO3", "OSZICAR_H2")
 # print(energy)
