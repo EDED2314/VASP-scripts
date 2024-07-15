@@ -9,6 +9,7 @@ from scipy.spatial.distance import euclidean
 import os
 from distutils.dir_util import copy_tree
 import shutil
+import pandas as pd
 
 
 class bcolors:
@@ -472,6 +473,7 @@ def adsorptionEnergy(
     customPathBoth="",
     customPathSurf="",
     customPathAds="",
+    adsMulti=1,
 ):
     """
     First param is for the oszicar of the surface and adsorbate sim, like WO3 vacancy plus H atom
@@ -512,7 +514,7 @@ def adsorptionEnergy(
 
     energyBoth = float(both[2])
     energySurf = float(surf[2])
-    energyAds = float(ads[2])
+    energyAds = adsMulti * float(ads[2])  # edit later
 
     return energyBoth - (energySurf + energyAds)
 
@@ -605,7 +607,6 @@ cleanUp()
 # print(dis[2])
 
 # EX 6
-"energyBoth - (energySurf + energyAds)"
 
 
 # ex 6.1
@@ -615,21 +616,25 @@ def analyzeOutputOfFolder(POST_DIRECTORY):
         data = {}
         data["name"] = postFile.replace("OSZICAR_", "")
         data["energy"] = adsorptionEnergy(
-            postFile, "OSZICAR_WO3", "OSZICAR_H", customPathBoth=POST_DIRECTORY
+            postFile,
+            "OSZICAR_WO3",
+            "OSZICAR_H2",
+            customPathBoth=POST_DIRECTORY,
+            adsMulti=0.5,
         )
         datas.append(data)
     return datas
 
 
 H_post = "POSTOUTPUT/H_POST"
-datas = analyzeOutputOfFolder(H_post)
-print(datas)
+df = pd.DataFrame(analyzeOutputOfFolder(H_post))
+df.to_csv("data/adsorption_energy")
+print(df)
 
-# ex 6.2
-# energy1 = adsorptionEnergy("OSZICAR_N2_WO3_V", "OSZICAR_WO3_V", "OSZICAR_N2")
+# # ex 6.2
 # energy = adsorptionEnergy("OSZICAR_H_WO3", "OSZICAR_WO3", "OSZICAR_H2")
+# energy = adsorptionEnergy("OSZICAR_N2_WO3_V", "OSZICAR_WO3_V", "OSZICAR_N2")
 # print(energy)
-# print(energy1)
 
 # for i in range(3):
 #     fileName = add_h(slab.copy(), h.copy(), height_above_slab, "W", i)
