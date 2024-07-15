@@ -465,22 +465,41 @@ def generateAdsorbentInVacuum(empty, molecule_or_atom, symbol: str):
 
 
 # POST SIM ANALYSIS
-def adsorptionEnergy(OSZICAR_BOTH, OSZICAR_SURF, OSZICAR_ADS):
+def adsorptionEnergy(
+    OSZICAR_BOTH,
+    OSZICAR_SURF,
+    OSZICAR_ADS,
+    customPathBoth="",
+    customPathSurf="",
+    customPathAds="",
+):
     """
     First param is for the oszicar of the surface and adsorbate sim, like WO3 vacancy plus H atom
     Second param is the oszicar for the surface
     Third is for the adsorbate
     """
     both = []
-    with open(f"{OUTPUT_DIR}/{OSZICAR_BOTH}") as f:
+    bothDirectory = f"{OUTPUT_DIR}/{OSZICAR_BOTH}"
+    if customPathBoth != "":
+        bothDirectory = f"{customPathBoth}/{OSZICAR_BOTH}"
+
+    with open(bothDirectory) as f:
         both = f.readlines()
 
     surf = []
-    with open(f"{OUTPUT_DIR}/{OSZICAR_SURF}") as f:
+    surfDirectory = f"{OUTPUT_DIR}/{OSZICAR_SURF}"
+    if customPathSurf != "":
+        surfDirectory = f"{customPathSurf}/{OSZICAR_SURF}"
+
+    with open(surfDirectory) as f:
         surf = f.readlines()
 
     ads = []
-    with open(f"{OUTPUT_DIR}/{OSZICAR_ADS}") as f:
+    adsDirectory = f"{OUTPUT_DIR}/{OSZICAR_ADS}"
+    if customPathAds != "":
+        adsDirectory = f"{customPathAds}/{OSZICAR_ADS}"
+
+    with open(adsDirectory) as f:
         ads = f.readlines()
 
     lastLineBoth = both[-1]
@@ -488,19 +507,8 @@ def adsorptionEnergy(OSZICAR_BOTH, OSZICAR_SURF, OSZICAR_ADS):
     lastLineAds = ads[-1]
 
     both = lastLineBoth.split()
-    both.pop(5)
-    both[5] = "dE="
-    both[6] = both[6].strip("=")
-
     surf = lastLineSurf.split()
-    surf.pop(5)
-    surf[5] = "dE="
-    surf[6] = surf[6].strip("=")
-
     ads = lastLineAds.split()
-    ads.pop(5)
-    ads[5] = "dE="
-    ads[6] = ads[6].strip("=")
 
     energyBoth = float(both[2])
     energySurf = float(surf[2])
@@ -577,7 +585,7 @@ cleanUp()
 # replacePOTCARfromHtoN()
 
 # Ex 4t
-generateAdsorbentInVacuum(emptyCell.copy(), h2o, "H2O")
+# generateAdsorbentInVacuum(emptyCell.copy(), h2o, "H2O")
 # generateAdsorbentInVacuum(emptyCell.copy(), h, "H")
 # generateAdsorbentInVacuum(emptyCell.copy(), n2, "N2")
 # generateAdsorbentInVacuum(emptyCell.copy(), h2, "H2")
@@ -597,9 +605,18 @@ generateAdsorbentInVacuum(emptyCell.copy(), h2o, "H2O")
 # print(dis[2])
 
 # EX 6
-# adsorptionEnergy("OSZICAR_N2_WO3_V", "OSZICAR_WO3_V", "OSZICAR_N2")
-# energy = adsorptionEnergy("OSZICAR_H_WO3", "OSZICAR_WO3", "OSZICAR_H")
-# print(energy)
+"energyBoth - (energySurf + energyAds)"
+H_post = "POSTOUTPUT/H_POST"
+
+for postFile in os.listdir(H_post):
+    data = {}
+    data["name"] = postFile.strip("OSZICAR_")
+
+
+energy1 = adsorptionEnergy("OSZICAR_N2_WO3_V", "OSZICAR_WO3_V", "OSZICAR_N2")
+energy = adsorptionEnergy("OSZICAR_H_WO3", "OSZICAR_WO3", "OSZICAR_H2")
+print(energy)
+print(energy1)
 
 # for i in range(3):
 #     fileName = add_h(slab.copy(), h.copy(), height_above_slab, "W", i)
