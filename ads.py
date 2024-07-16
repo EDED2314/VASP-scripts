@@ -69,6 +69,7 @@ def generateSimulationFolders(
     customFolderName="",
     jobFileName="gpu.slurm",
     templateFolderName="templates_W001",
+    trailString="",
 ):
     # ex:f"POSCAR_H2O_Vac_{symbol}{index}"
     # ex:f"POSCAR_H2_above_{symbol}{index}"
@@ -134,6 +135,8 @@ def generateSimulationFolders(
     if orientation == "avg":
         replacementString = f"A{idc}{moleculeAbove}"  # 1 4 3
 
+    replacementString += trailString
+
     content = ""
     with open(jobFileName, "r") as f:
         content = f.read()
@@ -193,7 +196,7 @@ def find_average_of_symbol(symbol, idxs, slab):
     return (avg_x, avg_y)
 
 
-def remove_atom_at_position(slabb, x, y, atom_type):
+def remove_atom_at_position_on_surface(slabb, x, y, atom_type):
     atoms_to_remove = []
     for atom in slabb:
         if (
@@ -264,7 +267,7 @@ def generateSlabVac(slab, symbol, index):
     atom_list = getSurfaceAtoms(symbol, index, slab)
     x = atom_list[index].position[0]
     y = atom_list[index].position[1]
-    remove_atom_at_position(slab, x, y, symbol)
+    remove_atom_at_position_on_surface(slab, x, y, symbol)
     write("POSCAR", slab, format="vasp")
     genKpoints("POSCAR")
 
@@ -299,7 +302,7 @@ def add_adsorbate_custom(
             x = atom_list[index].position[0]
             y = atom_list[index].position[1]
             if vacancy:
-                remove_atom_at_position(slab, x, y, "O")
+                remove_atom_at_position_on_surface(slab, x, y, "O")
 
         else:
             x, y = find_average_of_symbol(symbol, idxs, slab)
@@ -552,7 +555,7 @@ def adsorptionEnergy(
     return energyBoth - (energySurf + energyAds)
 
 
-def analyzeOutputOfFolder(
+def adsorptionEnergiesOfFolder(
     POST_DIRECTORY,
     OSZICAR_SURF,
     OSZICAR_ADS,
@@ -851,7 +854,7 @@ fileName = add_h(
     large_slab.copy(), h.copy(), height_above_slab, "O", 0, dis_x=0, dis_y=0
 )
 print(fileName)
-generateSimulationFolders(fileName, "H_x2y2", templateFolderName="templates_W001_x2y2")
+generateSimulationFolders(fileName, "H_x2y2", templateFolderName="templates_W001_x2y2",  trailString="LG")
 
 
 # EX 2
@@ -951,7 +954,7 @@ def generateHStuff():
     H_post_contcar = "POSTCONTCAR/H_CONTCAR"
     key = "Orientation/Location Molecule Takes"
     df = pd.DataFrame(
-        analyzeOutputOfFolder(
+        adsorptionEnergiesOfFolder(
             H_post,
             "OSZICAR_WO3",
             "OSZICAR_H2",
