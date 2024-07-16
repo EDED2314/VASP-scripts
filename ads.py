@@ -637,6 +637,8 @@ def addContcarImagesToDf(
 
         if not os.path.exists(f"images/{first_name}"):
             os.mkdir(f"images/{first_name}")
+        if not os.path.exists(f"images/{POSCAR_DIRECTORY}_POSCAR"):
+            os.mkdir(f"images/{POSCAR_DIRECTORY}_POSCAR")
 
         if os.path.exists(f"images/{first_name}/{name}"):
             if override:
@@ -961,7 +963,7 @@ df = df.drop("W2")
 df = df.drop("Avg-O235")
 df = df.reset_index()
 
-df, format_dict = addContcarImagesToDf(df, H_post_contcar, "H", key, override=False)
+df, format_dict = addContcarImagesToDf(df, H_post_contcar, "H", key, override=True)
 
 refKey = addShortestThreeBondLengthsToDf(key, "H", "O", H_post_contcar)
 df.insert(2, refKey, df.pop(refKey))
