@@ -159,7 +159,7 @@ def genKpoints(fileName: str):
         return
 
 
-def find_average_of_symbol(symbol, idxs):
+def find_average_of_symbol(symbol, idxs, slab):
     points = []
 
     available_atoms = []
@@ -210,7 +210,7 @@ def remove_atom_at_position(slabb, x, y, atom_type):
     slabb.pop(atom.index)
 
 
-def getSurfaceAtoms(symbol, index):
+def getSurfaceAtoms(symbol, index, slab):
     available_atoms = []
     for atom in slab:
         if atom.symbol == symbol:
@@ -261,8 +261,7 @@ def get_bottom_two_layers(slab):
 
 
 def generateSlabVac(slab, symbol, index):
-    atom_list = getSurfaceAtoms(symbol, index)
-    print(atom_list)
+    atom_list = getSurfaceAtoms(symbol, index, slab)
     x = atom_list[index].position[0]
     y = atom_list[index].position[1]
     remove_atom_at_position(slab, x, y, "O")
@@ -295,7 +294,7 @@ def add_adsorbate_custom(
         y = overridePos[1]
     else:
         if len(idxs) == 0:
-            atom_list = getSurfaceAtoms(symbol, index)
+            atom_list = getSurfaceAtoms(symbol, index, slab)
 
             x = atom_list[index].position[0]
             y = atom_list[index].position[1]
@@ -303,7 +302,7 @@ def add_adsorbate_custom(
                 remove_atom_at_position(slab, x, y, "O")
 
         else:
-            x, y = find_average_of_symbol(symbol, idxs)
+            x, y = find_average_of_symbol(symbol, idxs, slab)
 
     add_adsorbate(
         slab,
@@ -603,7 +602,7 @@ def calculateDistancesForEachAtomPair(slab, symbol1, symbol2, radius1=0.0, radiu
     return datas, dis
 
 
-def addImagesToDf(df, htmlFileNameAndPath, CONTCAR_DIRECTORY, override=False):
+def addImagesToDf(df, CONTCAR_DIRECTORY: str, key: str, override=False):
 
     def plotThenSaveAtoms(slab, x, y, z, ax, output_file):
         plot_atoms(slab, ax, rotation=f"{x}x,{y}y,{z}z")
@@ -620,9 +619,11 @@ def addImagesToDf(df, htmlFileNameAndPath, CONTCAR_DIRECTORY, override=False):
     if not os.path.exists("images"):
         os.mkdir("images")
 
+    names = df[key]
     fig, ax = plt.subplots()
-    for fileName in os.listdir(CONTCAR_DIRECTORY):
-        second_name = fileName.split("_")[1]
+    for name in names:
+        fileName = "CONTCAR_" + name
+        second_name = name
         first_name = CONTCAR_DIRECTORY.split("/")[1]
 
         slab = read(f"{CONTCAR_DIRECTORY}/{fileName}")
@@ -697,8 +698,8 @@ def addImagesToDf(df, htmlFileNameAndPath, CONTCAR_DIRECTORY, override=False):
     images2.sort()
     images3.sort()
 
-    df["angle1"] = images1
-    df["angle2"] = images2
+    df["angle1"] = images2
+    df["angle2"] = images1
     df["angle3"] = images3
 
     image_cols = ["angle1", "angle2", "angle3"]
@@ -707,9 +708,25 @@ def addImagesToDf(df, htmlFileNameAndPath, CONTCAR_DIRECTORY, override=False):
     for image_col in image_cols:
         format_dict[image_col] = path_to_image_html
 
-    df.to_html(htmlFileNameAndPath, escape=False, formatters=format_dict)
+    return df, format_dict
 
-    return df
+
+def getXYfromDfAtoms(df, symbol: str, key: str, slab):
+    xypairs = []
+    atoms = getSurfaceAtoms(symbol, 0, slab)
+    for name in df[key]:
+        if len(name) == 2:
+            index = name[1]
+            x = atoms[int(index)].position[0]
+            y = atoms[int(index)].position[1]
+        else:
+            indices = name.split(symbol)[1]
+            x, y = find_average_of_symbol(
+                symbol, [int(idx) for idx in list(indices)], slab
+            )
+
+        xypairs.append((x, y))
+    return xypairs
 
 
 slab = read("CNST_CONTCAR_WO3")
@@ -802,14 +819,25 @@ df = pd.DataFrame(
     )
 )
 df = df.sort_values(key)
+df = df.set_index(key)
+df = df.drop("O1")
+df = df.drop("O2")
+df = df.drop("O3")
+df = df.drop("O4")
+df = df.drop("O5")
+df = df.drop("W2")
+df = df.drop("Avg-O235")
+df = df.reset_index()
 
-dataframe = addImagesToDf(
-    df, "data/H_atom_adsorption_energy.html", H_post_contcar, override=False
-)
+df, format_dict = addImagesToDf(df, H_post_contcar, key, override=False)
 
-print(dataframe)
+xypairs = getXYfromDfAtoms(df, "O", key, slab)
+df["x,y"] = xypairs
 
+df.insert(2, "x,y", df.pop("x,y"))
 
+df.to_html("data/H_atom_adsorption_energy.html", escape=False, formatters=format_dict)
+print(df)
 # # ex 6.2
 # energy = adsorptionEnergy("OSZICAR_H_WO3", "OSZICAR_WO3", "OSZICAR_H2")
 # energy = adsorptionEnergy("OSZICAR_N2_WO3_V", "OSZICAR_WO3_V", "OSZICAR_N2")
