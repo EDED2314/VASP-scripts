@@ -22,3 +22,5 @@ for SUBDIR in "$SOURCE_DIR"/*; do
         fi
     fi
 done
+
+zip -r "$DEST_DIR".zip $DEST_DIR
