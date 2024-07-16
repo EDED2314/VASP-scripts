@@ -52,3 +52,9 @@ done
 zip -r "${DEST_DIR}.zip" "$DEST_DIR"
 rm -rf "$DEST_DIR"
 
+echo "done"
+echo "Zip file location: ${PWD}/${DEST_DIR}.zip" 
+
+
+
+
