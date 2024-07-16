@@ -854,7 +854,9 @@ fileName = add_h(
     large_slab.copy(), h.copy(), height_above_slab, "O", 0, dis_x=0, dis_y=0
 )
 print(fileName)
-generateSimulationFolders(fileName, "H_x2y2", templateFolderName="templates_W001_x2y2",  trailString="LG")
+generateSimulationFolders(
+    fileName, "H_x2y2", templateFolderName="templates_W001_x2y2", trailString="LG"
+)
 
 
 # EX 2
