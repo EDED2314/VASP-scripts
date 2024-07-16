@@ -12,6 +12,8 @@ from distutils.dir_util import copy_tree
 import shutil
 import pandas as pd
 
+pd.set_option("display.max_colwidth", None)
+
 from ase.visualize.plot import plot_atoms
 import matplotlib.pyplot as plt
 
@@ -601,6 +603,115 @@ def calculateDistancesForEachAtomPair(slab, symbol1, symbol2, radius1=0.0, radiu
     return datas, dis
 
 
+def addImagesToDf(df, htmlFileNameAndPath, CONTCAR_DIRECTORY, override=False):
+
+    def plotThenSaveAtoms(slab, x, y, z, ax, output_file):
+        plot_atoms(slab, ax, rotation=f"{x}x,{y}y,{z}z")
+        ax.set_axis_off()
+        plt.savefig(output_file, bbox_inches="tight", pad_inches=0.1, dpi=300)
+        plt.cla()
+
+    def path_to_image_html(path):
+        return '<img src="' + path + '" width="200" >'
+
+    images1 = []
+    images2 = []
+    images3 = []
+    if not os.path.exists("images"):
+        os.mkdir("images")
+
+    fig, ax = plt.subplots()
+    for fileName in os.listdir(CONTCAR_DIRECTORY):
+        second_name = fileName.split("_")[1]
+        first_name = CONTCAR_DIRECTORY.split("/")[1]
+
+        slab = read(f"{CONTCAR_DIRECTORY}/{fileName}")
+
+        if not os.path.exists(f"images/{first_name}"):
+            os.mkdir(f"images/{first_name}")
+
+        if os.path.exists(f"images/{first_name}/{second_name}"):
+            if override:
+                shutil.rmtree(f"images/{first_name}/{second_name}")
+            else:
+                if os.path.exists(
+                    f"images/{first_name}/{second_name}/slab_135x_90y_225z.png"
+                ):
+                    images1.append(
+                        os.path.abspath(
+                            f"images/{first_name}/{second_name}/slab_135x_90y_225z.png"
+                        )
+                    )
+                    images2.append(
+                        os.path.abspath(
+                            f"images/{first_name}/{second_name}/slab_180x_180y_45z.png"
+                        )
+                    )
+                    images3.append(
+                        os.path.abspath(
+                            f"images/{first_name}/{second_name}/slab_225x_225y_35z.png"
+                        )
+                    )
+                    continue
+
+        os.mkdir(f"images/{first_name}/{second_name}")
+
+        plotThenSaveAtoms(
+            slab,
+            135,
+            90,
+            225,
+            ax,
+            f"images/{first_name}/{second_name}/slab_135x_90y_225z.png",
+        )
+        plotThenSaveAtoms(
+            slab,
+            180,
+            180,
+            45,
+            ax,
+            f"images/{first_name}/{second_name}/slab_180x_180y_45z.png",
+        )
+        plotThenSaveAtoms(
+            slab,
+            225,
+            225,
+            35,
+            ax,
+            f"images/{first_name}/{second_name}/slab_225x_225y_35z.png",
+        )
+
+        images1.append(
+            os.path.abspath(f"images/{first_name}/{second_name}/slab_135x_90y_225z.png")
+        )
+        images2.append(
+            os.path.abspath(f"images/{first_name}/{second_name}/slab_180x_180y_45z.png")
+        )
+        images3.append(
+            os.path.abspath(f"images/{first_name}/{second_name}/slab_225x_225y_35z.png")
+        )
+
+    plt.close(fig)
+
+    images1.sort()
+    images2.sort()
+    images3.sort()
+
+    df["angle1"] = images1
+    df["angle2"] = images2
+    df["angle3"] = images3
+
+    image_cols = ["angle1", "angle2", "angle3"]
+
+    format_dict = {}
+    for image_col in image_cols:
+        format_dict[image_col] = path_to_image_html
+
+    df.to_html(htmlFileNameAndPath, escape=False, formatters=format_dict)
+
+    return df
+
+
 slab = read("CNST_CONTCAR_WO3")
 # large_slab = read("CNST_CONTCAR_WO3_LG")
 emptyCell = read("CNST_CONTCAR_EMPTY")
@@ -690,112 +801,13 @@ df = pd.DataFrame(
         energy_label="Adsorption Energy (eV)",
     )
 )
-
-
-def plotThenSaveAtoms(slab, x, y, z, ax, output_file):
-    plot_atoms(slab, ax, rotation=f"{x}x,{y}y,{z}z")
-    ax.set_axis_off()
-    plt.savefig(output_file, bbox_inches="tight", pad_inches=0.1, dpi=300)
-    plt.cla()
-
-
-images1 = []
-images2 = []
-images3 = []
-if not os.path.exists("images"):
-    os.mkdir("images")
-
-fig, ax = plt.subplots()
-for fileName in os.listdir(H_post_contcar):
-    second_name = fileName.split("_")[1]
-    first_name = H_post_contcar.split("/")[1]
-
-    slab = read(f"{H_post_contcar}/{fileName}")
-
-    if not os.path.exists(f"images/{first_name}"):
-        os.mkdir(f"images/{first_name}")
-
-    if os.path.exists(f"images/{first_name}/{second_name}"):
-        # shutil.rmtree(f"images/{first_name}/{second_name}")
-        if os.path.exists(f"images/{first_name}/{second_name}/slab_135x_90y_225z.png"):
-            images1.append(
-                os.path.abspath(
-                    f"images/{first_name}/{second_name}/slab_135x_90y_225z.png"
-                )
-            )
-            images2.append(
-                os.path.abspath(
-                    f"images/{first_name}/{second_name}/slab_180x_180y_45z.png"
-                )
-            )
-            images3.append(
-                os.path.abspath(
-                    f"images/{first_name}/{second_name}/slab_225x_225y_35z.png"
-                )
-            )
-            continue
-
-    os.mkdir(f"images/{first_name}/{second_name}")
-
-    plotThenSaveAtoms(
-        slab,
-        135,
-        90,
-        225,
-        ax,
-        f"images/{first_name}/{second_name}/slab_135x_90y_225z.png",
-    )
-    plotThenSaveAtoms(
-        slab,
-        180,
-        180,
-        45,
-        ax,
-        f"images/{first_name}/{second_name}/slab_180x_180y_45z.png",
-    )
-    plotThenSaveAtoms(
-        slab,
-        225,
-        225,
-        35,
-        ax,
-        f"images/{first_name}/{second_name}/slab_225x_225y_35z.png",
-    )
-
-    images1.append(
-        os.path.abspath(f"images/{first_name}/{second_name}/slab_135x_90y_225z.png")
-    )
-    images2.append(
-        os.path.abspath(f"images/{first_name}/{second_name}/slab_180x_180y_45z.png")
-    )
-    images3.append(
-        os.path.abspath(f"images/{first_name}/{second_name}/slab_225x_225y_35z.png")
-    )
-
-plt.close(fig)
-
-
-df["135x"] = images1
-df["180x"] = images2
-df["225x"] = images3
-
-
-def path_to_image_html(path):
-    return '<img src="' + path + '" width="60" >'
-
-
-pd.set_option("display.max_colwidth", None)
-
-image_cols = ["135x", "180x", "225x"]
-
-format_dict = {}
-for image_col in image_cols:
-    format_dict[image_col] = path_to_image_html
-
 df = df.sort_values(key)
-# df.to_csv("data/adsorption_energy.csv")
-df.to_html("data/H_atom_adsorption_energy.html", escape=False, formatters=format_dict)
-print(df)
+
+dataframe = addImagesToDf(
+    df, "data/H_atom_adsorption_energy.html", H_post_contcar, override=False
+)
+
+print(dataframe)
 
 
 # # ex 6.2
