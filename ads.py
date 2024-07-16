@@ -5,6 +5,7 @@ from ase.build import molecule
 from ase import Atom, Atoms
 from pymatgen.io.vasp import Poscar, Kpoints
 from scipy.spatial.distance import euclidean
+from ase.constraints import FixAtoms
 
 import os
 from distutils.dir_util import copy_tree
@@ -13,6 +14,8 @@ import pandas as pd
 
 from ase.visualize.plot import plot_atoms
 import matplotlib.pyplot as plt
+
+import numpy as np
 
 
 class bcolors:
@@ -47,26 +50,24 @@ def cleanUp():
             os.remove(name)
 
 
-def replacePOTCARfromHtoN():
-    fileNames = os.listdir()
-    N_folders = []
-    for name in fileNames:
-        if os.path.isdir(name):
-            if "N" in name:
-                N_folders.append(name)
-
-    for folder in N_folders:
-        os.chdir(folder)
-        simFolders = os.listdir()
-        for sim in simFolders:
+def replacePOTCARfromHtoN(N_folder):
+    os.chdir(N_folder)
+    simFolders = os.listdir()
+    for sim in simFolders:
+        if os.path.isdir(sim):
             current_potcar_path = os.path.join(sim, "POTCAR")
-            shutil.copy("../POTCAR", current_potcar_path)
+            shutil.copy("N_POTCAR", current_potcar_path)
             print(f"Replaced POTCAR in {sim}")
 
-        os.chdir("..")
+    os.chdir("..")
 
 
-def generateSimulationFolders(fileName: str, customName=""):
+def generateSimulationFolders(
+    fileName: str,
+    customFolderName="",
+    jobFileName="gpu.slurm",
+    templateFolderName="templates_W001",
+):
     # ex:f"POSCAR_H2O_Vac_{symbol}{index}"
     # ex:f"POSCAR_H2_above_{symbol}{index}"
     # ex:f"POSCAR_N2_Vac_{symbol}{index}_"
@@ -80,10 +81,10 @@ def generateSimulationFolders(fileName: str, customName=""):
     if len(tmp) == 5:
         orientation = tmp[4]
 
-    if len(customName) == 0:
+    if len(customFolderName) == 0:
         mainDirectoryName = moleculeAbove
     else:
-        mainDirectoryName = customName
+        mainDirectoryName = customFolderName
 
     if not os.path.exists(mainDirectoryName):
         os.mkdir(mainDirectoryName)
@@ -108,9 +109,12 @@ def generateSimulationFolders(fileName: str, customName=""):
     os.chdir("..")
 
     # template directory containing KPOINTS INCAR and POT and job.slurm
-    from_directory = "./templates_W001"
+    from_directory = f"./{templateFolderName}"
     to_directory = f"./{mainDirectoryName}/{folderName}"
-    copy_tree(from_directory, to_directory)
+    shutil.copy(from_directory + "/INCAR", to_directory + "/INCAR")
+    shutil.copy(from_directory + "/KPOINTS", to_directory + "/KPOINTS")
+    shutil.copy(from_directory + "/POTCAR", to_directory + "/POTCAR")
+    shutil.copy(from_directory + "/" + jobFileName, to_directory + "/" + jobFileName)
 
     os.rename(fileName, f"./{to_directory}/POSCAR")
 
@@ -129,12 +133,12 @@ def generateSimulationFolders(fileName: str, customName=""):
         replacementString = f"A{idc}{moleculeAbove}"  # 1 4 3
 
     content = ""
-    with open("gpu.slurm", "r") as f:
+    with open(jobFileName, "r") as f:
         content = f.read()
 
     content = content.replace("JOBNAME", replacementString)
 
-    with open("gpu.slurm", "w") as f:
+    with open(jobFileName, "w") as f:
         f.write(content)
 
     os.chdir("..")
@@ -236,12 +240,36 @@ def getSurfaceAtoms(symbol, index):
     return atom_list
 
 
+def get_bottom_two_layers(slab):
+    # Get all z positions of the atoms
+    z_positions = [atom.position[2] for atom in slab]
+    z_positions.sort()
+
+    # Find the unique z positions and identify the bottom two layers
+    unique_z = np.unique(z_positions)
+    bottom_two_layers_z = unique_z[:2]
+
+    # Get atoms in the bottom two layers
+    bottom_two_layers_atoms = []
+    for atom in slab:
+        if atom.position[2] in bottom_two_layers_z:
+            bottom_two_layers_atoms.append(atom.index)
+
+    return bottom_two_layers_atoms
+
+
 def generateSlabVac(slab, symbol, index):
     atom_list = getSurfaceAtoms(symbol, index)
     x = atom_list[index].position[0]
     y = atom_list[index].position[1]
     remove_atom_at_position(slab, x, y, "O")
     write("POSCAR", slab, format="vasp")
+    genKpoints("POSCAR")
+
+
+def generateSlab(slab):
+    write("POSCAR", slab, format="vasp")
+    genKpoints("POSCAR")
 
 
 def add_adsorbate_custom(
@@ -522,17 +550,24 @@ def adsorptionEnergy(
     return energyBoth - (energySurf + energyAds)
 
 
-def analyzeOutputOfFolder(POST_DIRECTORY, name_label="name", energy_label="energy"):
+def analyzeOutputOfFolder(
+    POST_DIRECTORY,
+    OSZICAR_SURF,
+    OSZICAR_ADS,
+    multi=1,
+    name_label="name",
+    energy_label="energy",
+):
     datas = []
     for postFile in os.listdir(POST_DIRECTORY):
         data = {}
         data[name_label] = postFile.replace("OSZICAR_", "")
         data[energy_label] = adsorptionEnergy(
             postFile,
-            "OSZICAR_WO3",
-            "OSZICAR_H2",
+            OSZICAR_SURF,
+            OSZICAR_ADS,
             customPathBoth=POST_DIRECTORY,
-            adsMulti=0.5,
+            adsMulti=multi,
         )
         datas.append(data)
     return datas
@@ -574,8 +609,16 @@ triangle_2 = [2, 3, 5]
 cleanUp()
 
 # EX 0
+# EX 0.1
 # generateSlabVac(slab.copy(), "O", 0)
 
+# Ex 0.2
+# slab = read("../backupPSCR", format="vasp")
+# fixed_atoms_indices = get_bottom_two_layers(slab)
+# constraint = FixAtoms(indices=fixed_atoms_indices)
+# slab.set_constraint(constraint)
+# write("CONTCAR_fixed", slab)
+# print(f"Fixed atoms indices: {fixed_atoms_indices}")
 
 # EX 1
 # newSlab = read("CNST_CONTCAR_H_WO3_TEST")
@@ -598,12 +641,16 @@ cleanUp()
 # generateSimulationFolders(fileName)
 
 # EX 3
-# fileName = add_n2_vacancy(
-#     slab.copy(), n2.copy(), height_above_slab, "O", 0, "coplanar", 0
-# )
-# print(fileName)
-# generateSimulationFolders(fileName)
-# replacePOTCARfromHtoN()
+
+# in reality it is no longer O0 but O smth else cuz its a bigger slab
+fileName = add_n2_vacancy(
+    slab.copy(), n2.copy(), height_above_slab, "O", 0, "upright", 0
+)
+print(fileName)
+generateSimulationFolders(
+    fileName, "N2_WO3_x2y2_V", templateFolderName="templates_W001_x2y2"
+)
+replacePOTCARfromHtoN("N2_WO3_x2y2_V")
 
 # Ex 4t
 # generateAdsorbentInVacuum(emptyCell.copy(), h2o, "H2O")
@@ -629,10 +676,18 @@ cleanUp()
 
 # ex 6.1
 # H_post = "POSTOUTPUT/H_POST"
+# key = "Orientation/Location Molecule Takes"
 # df = pd.DataFrame(
-#     analyzeOutputOfFolder(H_post, "Atom H atom on top of", "Adsorption Energy (eV)")
+#     analyzeOutputOfFolder(
+#         H_post,
+#         "OSZICAR_WO3",
+#         "OSZICAR_H2",
+#         multi=0.5,
+#         name_label=key,
+#         energy_label="Adsorption Energy (eV)",
+#     )
 # )
-# df = df.sort_values("Atom H atom on top of")
+# df = df.sort_values(key)
 # df.to_csv("data/adsorption_energy.csv")
 # df.to_html("data/H_atom_adsorption_energy.html")
 # print(df)
@@ -647,16 +702,18 @@ cleanUp()
 
 # read(format="vasp-xdatcar")
 
-fig, ax = plt.subplots()
-plot_atoms(slab, ax, rotation="0x,20y,90z")
-ax.set_axis_off()
+# fig, ax = plt.subplots()
+# plot_atoms(slab, ax, rotation="45x,225y,0z")
+# ax.set_axis_off()
 
 
-output_file = "data/slab_visualization.png"
-plt.savefig(output_file, bbox_inches="tight", pad_inches=0.1, dpi=300)
-plt.close(fig)
+# output_file = "data/slab_visualization.png"
+# plt.savefig(output_file, bbox_inches="tight", pad_inches=0.1, dpi=300)
+# plt.close(fig)
 
-print(f"Slab visualization saved to {output_file}")
+# print(f"Slab visualization saved to {output_file}")
+
+# EX9
 
 
 # EX8
