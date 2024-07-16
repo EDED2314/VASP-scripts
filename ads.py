@@ -260,6 +260,7 @@ def get_bottom_two_layers(slab):
 
 def generateSlabVac(slab, symbol, index):
     atom_list = getSurfaceAtoms(symbol, index)
+    print(atom_list)
     x = atom_list[index].position[0]
     y = atom_list[index].position[1]
     remove_atom_at_position(slab, x, y, "O")
@@ -601,6 +602,7 @@ def calculateDistancesForEachAtomPair(slab, symbol1, symbol2, radius1=0.0, radiu
 
 
 slab = read("CNST_CONTCAR_WO3")
+# large_slab = read("CNST_CONTCAR_WO3_LG")
 emptyCell = read("CNST_CONTCAR_EMPTY")
 height_above_slab = 2.2
 triangle_1 = [0, 1, 4]
@@ -642,15 +644,15 @@ cleanUp()
 
 # EX 3
 
-# in reality it is no longer O0 but O smth else cuz its a bigger slab
-fileName = add_n2_vacancy(
-    slab.copy(), n2.copy(), height_above_slab, "O", 0, "upright", 0
-)
-print(fileName)
-generateSimulationFolders(
-    fileName, "N2_WO3_x2y2_V", templateFolderName="templates_W001_x2y2"
-)
-replacePOTCARfromHtoN("N2_WO3_x2y2_V")
+# # in reality it is no longer O0 but O smth else cuz its a bigger slab
+# fileName = add_n2_vacancy(
+#     slab.copy(), n2.copy(), height_above_slab, "O", 0, "upright", 0
+# )
+# print(fileName)
+# generateSimulationFolders(
+#     fileName, "N2_WO3_x2y2_V", templateFolderName="templates_W001_x2y2"
+# )
+# replacePOTCARfromHtoN("N2_WO3_x2y2_V")
 
 # Ex 4t
 # generateAdsorbentInVacuum(emptyCell.copy(), h2o, "H2O")
@@ -701,20 +703,21 @@ replacePOTCARfromHtoN("N2_WO3_x2y2_V")
 # EX 7 - visualize
 
 # read(format="vasp-xdatcar")
-
+# shutil.rmtree("data")
+# os.mkdir("data")
 # fig, ax = plt.subplots()
-# plot_atoms(slab, ax, rotation="45x,225y,0z")
-# ax.set_axis_off()
 
-
-# output_file = "data/slab_visualization.png"
-# plt.savefig(output_file, bbox_inches="tight", pad_inches=0.1, dpi=300)
+# for x in [0, 45, 90, 135, 180, 225, 270, 315]:
+#     for y in [0, 45, 90, 135, 180, 225, 270, 315]:
+#         for z in [0, 45, 90, 135, 180, 225, 270, 315]:
+#             output_file = f"data/slab_{x}x_{y}y_{z}z.png"
+#             plot_atoms(slab, ax, rotation=f"{x}x,{y}y,{z}z")
+#             ax.set_axis_off()
+#             plt.savefig(output_file, bbox_inches="tight", pad_inches=0.1, dpi=300)
+#             plt.cla()
 # plt.close(fig)
 
 # print(f"Slab visualization saved to {output_file}")
-
-# EX9
-
 
 # EX8
 
@@ -730,5 +733,16 @@ replacePOTCARfromHtoN("N2_WO3_x2y2_V")
 #     print(fileName)
 #     generateSimulationFolders(fileName)
 
+# ex 9 - full ex 1
+
+fileName = add_n2_vacancy(
+    slab.copy(), n2.copy(), height_above_slab, "O", 0, "upright", 0
+)
+print(fileName)
+generateSimulationFolders(
+    fileName, "N2_WO3_x2y2_V", templateFolderName="templates_W001_x2y2"
+)
+replacePOTCARfromHtoN("N2_WO3_x2y2_V")
+# generateSlabVac(large_slab, "O", 0)
 
 print("----done----")
