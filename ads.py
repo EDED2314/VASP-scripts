@@ -690,8 +690,6 @@ df = pd.DataFrame(
         energy_label="Adsorption Energy (eV)",
     )
 )
-df = df.sort_values(key)
-# df.to_csv("data/adsorption_energy.csv")
 
 
 def plotThenSaveAtoms(slab, x, y, z, ax, output_file):
@@ -701,7 +699,9 @@ def plotThenSaveAtoms(slab, x, y, z, ax, output_file):
     plt.cla()
 
 
-images = []
+images1 = []
+images2 = []
+images3 = []
 if not os.path.exists("images"):
     os.mkdir("images")
 
@@ -716,7 +716,24 @@ for fileName in os.listdir(H_post_contcar):
         os.mkdir(f"images/{first_name}")
 
     if os.path.exists(f"images/{first_name}/{second_name}"):
-        shutil.rmtree(f"images/{first_name}/{second_name}")
+        # shutil.rmtree(f"images/{first_name}/{second_name}")
+        if os.path.exists(f"images/{first_name}/{second_name}/slab_135x_90y_225z.png"):
+            images1.append(
+                os.path.abspath(
+                    f"images/{first_name}/{second_name}/slab_135x_90y_225z.png"
+                )
+            )
+            images2.append(
+                os.path.abspath(
+                    f"images/{first_name}/{second_name}/slab_180x_180y_45z.png"
+                )
+            )
+            images3.append(
+                os.path.abspath(
+                    f"images/{first_name}/{second_name}/slab_225x_225y_35z.png"
+                )
+            )
+            continue
 
     os.mkdir(f"images/{first_name}/{second_name}")
 
@@ -745,54 +762,39 @@ for fileName in os.listdir(H_post_contcar):
         f"images/{first_name}/{second_name}/slab_225x_225y_35z.png",
     )
 
-    images.append(
+    images1.append(
         os.path.abspath(f"images/{first_name}/{second_name}/slab_135x_90y_225z.png")
     )
-    images.append(
+    images2.append(
         os.path.abspath(f"images/{first_name}/{second_name}/slab_180x_180y_45z.png")
     )
-    images.append(
+    images3.append(
         os.path.abspath(f"images/{first_name}/{second_name}/slab_225x_225y_35z.png")
     )
 
 plt.close(fig)
 
 
-# # your images
-# images1 = [
-#     "https://vignette.wikia.nocookie.net/2007scape/images/7/7a/Mage%27s_book_detail.png/revision/latest?cb=20180310083825",
-#     "https://i.pinimg.com/originals/d9/5c/9b/d95c9ba809aa9dd4cb519a225af40f2b.png",
-# ]
+df["135x"] = images1
+df["180x"] = images2
+df["225x"] = images3
 
 
-# images2 = [
-#     "https://static3.srcdn.com/wordpress/wp-content/uploads/2020/07/Quidditch.jpg?q=50&fit=crop&w=960&h=500&dpr=1.5",
-#     "https://specials-images.forbesimg.com/imageserve/5e160edc9318b800069388e8/960x0.jpg?fit=scale",
-# ]
-
-# df["imageUrls"] = images1
-# df["otherImageUrls"] = images2
+def path_to_image_html(path):
+    return '<img src="' + path + '" width="60" >'
 
 
-# # convert your links to html tags
-# def path_to_image_html(path):
-#     return '<img src="' + path + '" width="60" >'
+pd.set_option("display.max_colwidth", None)
 
+image_cols = ["135x", "180x", "225x"]
 
-# pd.set_option("display.max_colwidth", None)
+format_dict = {}
+for image_col in image_cols:
+    format_dict[image_col] = path_to_image_html
 
-# image_cols = [
-#     "imageUrls",
-#     "otherImageUrls",
-# ]  # <- define which columns will be used to convert to html
-
-# # Create the dictionariy to be passed as formatters
-# format_dict = {}
-# for image_col in image_cols:
-#     format_dict[image_col] = path_to_image_html
-
-
-df.to_html("data/H_atom_adsorption_energy.html")
+df = df.sort_values(key)
+# df.to_csv("data/adsorption_energy.csv")
+df.to_html("data/H_atom_adsorption_energy.html", escape=False, formatters=format_dict)
 print(df)
 
 
