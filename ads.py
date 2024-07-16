@@ -48,7 +48,7 @@ def cleanUp():
     for name in fileNames:
         if "POSCAR" in name:
             os.remove(name)
-        if "KPOINTS" in name:
+        elif "KPOINTS" in name:
             os.remove(name)
 
 
@@ -264,7 +264,7 @@ def generateSlabVac(slab, symbol, index):
     atom_list = getSurfaceAtoms(symbol, index, slab)
     x = atom_list[index].position[0]
     y = atom_list[index].position[1]
-    remove_atom_at_position(slab, x, y, "O")
+    remove_atom_at_position(slab, x, y, symbol)
     write("POSCAR", slab, format="vasp")
     genKpoints("POSCAR")
 
@@ -795,7 +795,7 @@ def getInitialXYfromDfAtoms(df, symbol: str, key: str, slab):
 
 
 def addShortestThreeBondLengthsToDf(
-    key: str, symbol1: str, symbol2: str, CONTCAR_DIRECTORY: str
+    df, key: str, symbol1: str, symbol2: str, CONTCAR_DIRECTORY: str
 ):
     names = df[key]
     formatted_list = []
@@ -812,7 +812,7 @@ def addShortestThreeBondLengthsToDf(
 
 
 slab = read("CNST_CONTCAR_WO3")
-# large_slab = read("CNST_CONTCAR_WO3_LG")
+large_slab = read("CNST_PSCR_WO3_LARGE", format="vasp")
 emptyCell = read("CNST_CONTCAR_EMPTY")
 height_above_slab = 2.2
 triangle_1 = [0, 1, 4]
@@ -823,6 +823,7 @@ cleanUp()
 # EX 0
 # EX 0.1
 # generateSlabVac(slab.copy(), "O", 0)
+# generateSlabVac(large_slab.copy(), "O", 0)
 
 # Ex 0.2
 # slab = read("../backupPSCR", format="vasp")
@@ -846,6 +847,12 @@ cleanUp()
 # print(fileName)
 # generateSimulationFolders(fileName, )
 
+fileName = add_h(
+    large_slab.copy(), h.copy(), height_above_slab, "O", 0, dis_x=0, dis_y=0
+)
+print(fileName)
+generateSimulationFolders(fileName, "H_x2y2", templateFolderName="templates_W001_x2y2")
+
 
 # EX 2
 # fileName = add_h2o_vacancy(slab.copy(), h2o.copy(), height_above_slab, "O", 0, "O_down")
@@ -860,9 +867,9 @@ cleanUp()
 # )
 # print(fileName)
 # generateSimulationFolders(
-#     fileName, "N2_WO3_x2y2_V", templateFolderName="templates_W001_x2y2"
+#     fileName, "N2_x2y2_V", templateFolderName="templates_W001_x2y2"
 # )
-# replacePOTCARfromHtoN("N2_WO3_x2y2_V")
+# replacePOTCARfromHtoN("N2_x2y2_V")
 
 # Ex 4t
 # generateAdsorbentInVacuum(emptyCell.copy(), h2o, "H2O")
@@ -933,46 +940,48 @@ cleanUp()
 # )
 # print(fileName)
 # generateSimulationFolders(
-#     fileName, "N2_WO3_x2y2_V", templateFolderName="templates_W001_x2y2"
+#     fileName, "N2_x2y2_V", templateFolderName="templates_W001_x2y2"
 # )
-# replacePOTCARfromHtoN("N2_WO3_x2y2_V")
+# replacePOTCARfromHtoN("N2_x2y2_V")
 # generateSlabVac(large_slab, "O", 0)
 
 
-H_post = "POSTOUTPUT/H_POST"
-H_post_contcar = "POSTCONTCAR/H_CONTCAR"
-key = "Orientation/Location Molecule Takes"
-df = pd.DataFrame(
-    analyzeOutputOfFolder(
-        H_post,
-        "OSZICAR_WO3",
-        "OSZICAR_H2",
-        multi=0.5,
-        name_label=key,
-        energy_label="Adsorption Energy (eV)",
+def generateHStuff():
+    H_post = "POSTOUTPUT/H_POST"
+    H_post_contcar = "POSTCONTCAR/H_CONTCAR"
+    key = "Orientation/Location Molecule Takes"
+    df = pd.DataFrame(
+        analyzeOutputOfFolder(
+            H_post,
+            "OSZICAR_WO3",
+            "OSZICAR_H2",
+            multi=0.5,
+            name_label=key,
+            energy_label="Adsorption Energy (eV)",
+        )
     )
-)
-df = df.sort_values(key)
-df = df.set_index(key)
-df = df.drop("O1")
-df = df.drop("O2")
-df = df.drop("O3")
-df = df.drop("O4")
-df = df.drop("O5")
-df = df.drop("W2")
-df = df.drop("Avg-O235")
-df = df.reset_index()
+    df = df.sort_values(key)
+    df = df.set_index(key)
+    df = df.drop("O1")
+    df = df.drop("O2")
+    df = df.drop("O3")
+    df = df.drop("O4")
+    df = df.drop("O5")
+    df = df.drop("W2")
+    df = df.drop("Avg-O235")
+    df = df.reset_index()
 
-df, format_dict = addContcarImagesToDf(df, H_post_contcar, "H", key, override=True)
+    df, format_dict = addContcarImagesToDf(df, H_post_contcar, "H", key, override=True)
 
-refKey = addShortestThreeBondLengthsToDf(key, "H", "O", H_post_contcar)
-df.insert(2, refKey, df.pop(refKey))
-refKey = addShortestThreeBondLengthsToDf(key, "H", "W", H_post_contcar)
-df.insert(2, refKey, df.pop(refKey))
+    refKey = addShortestThreeBondLengthsToDf(df, key, "H", "O", H_post_contcar)
+    df.insert(2, refKey, df.pop(refKey))
+    refKey = addShortestThreeBondLengthsToDf(df, key, "H", "W", H_post_contcar)
+    df.insert(2, refKey, df.pop(refKey))
 
-
-df.to_html("data/H_atom_adsorption_energy.html", escape=False, formatters=format_dict)
-print(df)
+    df.to_html(
+        "data/H_atom_adsorption_energy.html", escape=False, formatters=format_dict
+    )
+    print(df)
 
 
 print("----done----")
