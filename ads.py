@@ -602,7 +602,9 @@ def calculateDistancesForEachAtomPair(slab, symbol1, symbol2, radius1=0.0, radiu
     return datas, dis
 
 
-def addImagesToDf(df, CONTCAR_DIRECTORY: str, key: str, override=False):
+def addContcarImagesToDf(
+    df, CONTCAR_DIRECTORY: str, POSCAR_DIRECTORY: str, key: str, override=False
+):
 
     def plotThenSaveAtoms(slab, x, y, z, ax, output_file):
         plot_atoms(slab, ax, rotation=f"{x}x,{y}y,{z}z")
@@ -616,14 +618,19 @@ def addImagesToDf(df, CONTCAR_DIRECTORY: str, key: str, override=False):
     images1 = []
     images2 = []
     images3 = []
+    initImages1 = []
+    initImages2 = []
+    initImages3 = []
     if not os.path.exists("images"):
         os.mkdir("images")
 
     names = df[key]
     fig, ax = plt.subplots()
     for name in names:
+        initPoscar = f"{POSCAR_DIRECTORY}/{name}/POSCAR"
+        initSlab = read(initPoscar)
+
         fileName = "CONTCAR_" + name
-        second_name = name
         first_name = CONTCAR_DIRECTORY.split("/")[1]
 
         slab = read(f"{CONTCAR_DIRECTORY}/{fileName}")
@@ -631,31 +638,46 @@ def addImagesToDf(df, CONTCAR_DIRECTORY: str, key: str, override=False):
         if not os.path.exists(f"images/{first_name}"):
             os.mkdir(f"images/{first_name}")
 
-        if os.path.exists(f"images/{first_name}/{second_name}"):
+        if os.path.exists(f"images/{first_name}/{name}"):
             if override:
-                shutil.rmtree(f"images/{first_name}/{second_name}")
+                shutil.rmtree(f"images/{first_name}/{name}")
+                shutil.rmtree(f"images/{POSCAR_DIRECTORY}_POSCAR/{name}")
             else:
-                if os.path.exists(
-                    f"images/{first_name}/{second_name}/slab_135x_90y_225z.png"
-                ):
+                if os.path.exists(f"images/{first_name}/{name}/slab_135x_90y_225z.png"):
+                    initImages1.append(
+                        os.path.abspath(
+                            f"images/{POSCAR_DIRECTORY}_POSCAR/{name}/slab_135x_90y_225z.png"
+                        )
+                    )
+                    initImages2.append(
+                        os.path.abspath(
+                            f"images/{POSCAR_DIRECTORY}_POSCAR/{name}/slab_180x_180y_45z.png"
+                        )
+                    )
+                    initImages3.append(
+                        os.path.abspath(
+                            f"images/{POSCAR_DIRECTORY}_POSCAR/{name}/slab_225x_225y_35z.png"
+                        )
+                    )
                     images1.append(
                         os.path.abspath(
-                            f"images/{first_name}/{second_name}/slab_135x_90y_225z.png"
+                            f"images/{first_name}/{name}/slab_135x_90y_225z.png"
                         )
                     )
                     images2.append(
                         os.path.abspath(
-                            f"images/{first_name}/{second_name}/slab_180x_180y_45z.png"
+                            f"images/{first_name}/{name}/slab_180x_180y_45z.png"
                         )
                     )
                     images3.append(
                         os.path.abspath(
-                            f"images/{first_name}/{second_name}/slab_225x_225y_35z.png"
+                            f"images/{first_name}/{name}/slab_225x_225y_35z.png"
                         )
                     )
                     continue
 
-        os.mkdir(f"images/{first_name}/{second_name}")
+        os.mkdir(f"images/{first_name}/{name}")
+        os.mkdir(f"images/{POSCAR_DIRECTORY}_POSCAR/{name}")
 
         plotThenSaveAtoms(
             slab,
@@ -663,7 +685,7 @@ def addImagesToDf(df, CONTCAR_DIRECTORY: str, key: str, override=False):
             90,
             225,
             ax,
-            f"images/{first_name}/{second_name}/slab_135x_90y_225z.png",
+            f"images/{POSCAR_DIRECTORY}_POSCAR/{name}/slab_135x_90y_225z.png",
         )
         plotThenSaveAtoms(
             slab,
@@ -671,7 +693,7 @@ def addImagesToDf(df, CONTCAR_DIRECTORY: str, key: str, override=False):
             180,
             45,
             ax,
-            f"images/{first_name}/{second_name}/slab_180x_180y_45z.png",
+            f"images/{POSCAR_DIRECTORY}_POSCAR/{name}/slab_180x_180y_45z.png",
         )
         plotThenSaveAtoms(
             slab,
@@ -679,17 +701,43 @@ def addImagesToDf(df, CONTCAR_DIRECTORY: str, key: str, override=False):
             225,
             35,
             ax,
-            f"images/{first_name}/{second_name}/slab_225x_225y_35z.png",
+            f"images/{POSCAR_DIRECTORY}_POSCAR/{name}/slab_225x_225y_35z.png",
+        )
+
+        plotThenSaveAtoms(
+            slab, 135, 90, 225, ax, f"images/{first_name}/{name}/slab_135x_90y_225z.png"
+        )
+        plotThenSaveAtoms(
+            slab, 180, 180, 45, ax, f"images/{first_name}/{name}/slab_180x_180y_45z.png"
+        )
+        plotThenSaveAtoms(
+            slab, 225, 225, 35, ax, f"images/{first_name}/{name}/slab_225x_225y_35z.png"
+        )
+
+        initImages1.append(
+            os.path.abspath(
+                f"images/{POSCAR_DIRECTORY}_POSCAR/{name}/slab_135x_90y_225z.png"
+            )
+        )
+        initImages2.append(
+            os.path.abspath(
+                f"images/{POSCAR_DIRECTORY}_POSCAR/{name}/slab_180x_180y_45z.png"
+            )
+        )
+        initImages3.append(
+            os.path.abspath(
+                f"images/{POSCAR_DIRECTORY}_POSCAR/{name}/slab_225x_225y_35z.png"
+            )
         )
 
         images1.append(
-            os.path.abspath(f"images/{first_name}/{second_name}/slab_135x_90y_225z.png")
+            os.path.abspath(f"images/{first_name}/{name}/slab_135x_90y_225z.png")
         )
         images2.append(
-            os.path.abspath(f"images/{first_name}/{second_name}/slab_180x_180y_45z.png")
+            os.path.abspath(f"images/{first_name}/{name}/slab_180x_180y_45z.png")
         )
         images3.append(
-            os.path.abspath(f"images/{first_name}/{second_name}/slab_225x_225y_35z.png")
+            os.path.abspath(f"images/{first_name}/{name}/slab_225x_225y_35z.png")
         )
 
     plt.close(fig)
@@ -711,7 +759,7 @@ def addImagesToDf(df, CONTCAR_DIRECTORY: str, key: str, override=False):
     return df, format_dict
 
 
-def getXYfromDfAtoms(df, symbol: str, key: str, slab):
+def getInitialXYfromDfAtoms(df, symbol: str, key: str, slab):
     xypairs = []
     atoms = getSurfaceAtoms(symbol, 0, slab)
     for name in df[key]:
@@ -727,6 +775,23 @@ def getXYfromDfAtoms(df, symbol: str, key: str, slab):
 
         xypairs.append((x, y))
     return xypairs
+
+
+def addShortestThreeBondLengthsToDf(
+    key: str, symbol1: str, symbol2: str, CONTCAR_DIRECTORY: str
+):
+    names = df[key]
+    formatted_list = []
+    for name in names:
+        fileName = "CONTCAR_" + name
+        slab = read(f"{CONTCAR_DIRECTORY}/{fileName}")
+        _, dis = calculateDistancesForEachAtomPair(slab.copy(), symbol1, symbol2)
+        formatted = f"{dis[0]}<br>{dis[1]}<br>{dis[2]}"
+        formatted_list.append(formatted)
+
+    refKey = f"Shortest distances between atoms of {symbol1}, {symbol2} (Å)"
+    df[refKey] = formatted_list
+    return refKey
 
 
 slab = read("CNST_CONTCAR_WO3")
@@ -770,7 +835,7 @@ cleanUp()
 # print(fileName)
 # generateSimulationFolders(fileName)
 
-# EX 3
+# EX 3 TODO
 
 # # in reality it is no longer O0 but O smth else cuz its a bigger slab
 # fileName = add_n2_vacancy(
@@ -803,41 +868,6 @@ cleanUp()
 # print(dis[2])
 
 # EX 6
-
-# ex 6.1 - post analysis
-H_post = "POSTOUTPUT/H_POST"
-H_post_contcar = "POSTCONTCAR/H_CONTCAR"
-key = "Orientation/Location Molecule Takes"
-df = pd.DataFrame(
-    analyzeOutputOfFolder(
-        H_post,
-        "OSZICAR_WO3",
-        "OSZICAR_H2",
-        multi=0.5,
-        name_label=key,
-        energy_label="Adsorption Energy (eV)",
-    )
-)
-df = df.sort_values(key)
-df = df.set_index(key)
-df = df.drop("O1")
-df = df.drop("O2")
-df = df.drop("O3")
-df = df.drop("O4")
-df = df.drop("O5")
-df = df.drop("W2")
-df = df.drop("Avg-O235")
-df = df.reset_index()
-
-df, format_dict = addImagesToDf(df, H_post_contcar, key, override=False)
-
-xypairs = getXYfromDfAtoms(df, "O", key, slab)
-df["x,y"] = xypairs
-
-df.insert(2, "x,y", df.pop("x,y"))
-
-df.to_html("data/H_atom_adsorption_energy.html", escape=False, formatters=format_dict)
-print(df)
 # # ex 6.2
 # energy = adsorptionEnergy("OSZICAR_H_WO3", "OSZICAR_WO3", "OSZICAR_H2")
 # energy = adsorptionEnergy("OSZICAR_N2_WO3_V", "OSZICAR_WO3_V", "OSZICAR_N2")
@@ -890,5 +920,42 @@ print(df)
 # )
 # replacePOTCARfromHtoN("N2_WO3_x2y2_V")
 # generateSlabVac(large_slab, "O", 0)
+
+
+H_post = "POSTOUTPUT/H_POST"
+H_post_contcar = "POSTCONTCAR/H_CONTCAR"
+key = "Orientation/Location Molecule Takes"
+df = pd.DataFrame(
+    analyzeOutputOfFolder(
+        H_post,
+        "OSZICAR_WO3",
+        "OSZICAR_H2",
+        multi=0.5,
+        name_label=key,
+        energy_label="Adsorption Energy (eV)",
+    )
+)
+df = df.sort_values(key)
+df = df.set_index(key)
+df = df.drop("O1")
+df = df.drop("O2")
+df = df.drop("O3")
+df = df.drop("O4")
+df = df.drop("O5")
+df = df.drop("W2")
+df = df.drop("Avg-O235")
+df = df.reset_index()
+
+df, format_dict = addContcarImagesToDf(df, H_post_contcar, "H", key, override=False)
+
+refKey = addShortestThreeBondLengthsToDf(key, "H", "O", H_post_contcar)
+df.insert(2, refKey, df.pop(refKey))
+refKey = addShortestThreeBondLengthsToDf(key, "H", "W", H_post_contcar)
+df.insert(2, refKey, df.pop(refKey))
+
+
+df.to_html("data/H_atom_adsorption_energy.html", escape=False, formatters=format_dict)
+print(df)
+
 
 print("----done----")
