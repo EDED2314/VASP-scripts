@@ -676,23 +676,125 @@ cleanUp()
 
 # EX 6
 
-# ex 6.1
-# H_post = "POSTOUTPUT/H_POST"
-# key = "Orientation/Location Molecule Takes"
-# df = pd.DataFrame(
-#     analyzeOutputOfFolder(
-#         H_post,
-#         "OSZICAR_WO3",
-#         "OSZICAR_H2",
-#         multi=0.5,
-#         name_label=key,
-#         energy_label="Adsorption Energy (eV)",
-#     )
-# )
-# df = df.sort_values(key)
+# ex 6.1 - post analysis
+H_post = "POSTOUTPUT/H_POST"
+H_post_contcar = "POSTCONTCAR/H_CONTCAR"
+key = "Orientation/Location Molecule Takes"
+df = pd.DataFrame(
+    analyzeOutputOfFolder(
+        H_post,
+        "OSZICAR_WO3",
+        "OSZICAR_H2",
+        multi=0.5,
+        name_label=key,
+        energy_label="Adsorption Energy (eV)",
+    )
+)
+df = df.sort_values(key)
 # df.to_csv("data/adsorption_energy.csv")
-# df.to_html("data/H_atom_adsorption_energy.html")
-# print(df)
+
+
+def plotThenSaveAtoms(slab, x, y, z, ax, output_file):
+    plot_atoms(slab, ax, rotation=f"{x}x,{y}y,{z}z")
+    ax.set_axis_off()
+    plt.savefig(output_file, bbox_inches="tight", pad_inches=0.1, dpi=300)
+    plt.cla()
+
+
+images = []
+if not os.path.exists("images"):
+    os.mkdir("images")
+
+fig, ax = plt.subplots()
+for fileName in os.listdir(H_post_contcar):
+    second_name = fileName.split("_")[1]
+    first_name = H_post_contcar.split("/")[1]
+
+    slab = read(f"{H_post_contcar}/{fileName}")
+
+    if not os.path.exists(f"images/{first_name}"):
+        os.mkdir(f"images/{first_name}")
+
+    if os.path.exists(f"images/{first_name}/{second_name}"):
+        shutil.rmtree(f"images/{first_name}/{second_name}")
+
+    os.mkdir(f"images/{first_name}/{second_name}")
+
+    plotThenSaveAtoms(
+        slab,
+        135,
+        90,
+        225,
+        ax,
+        f"images/{first_name}/{second_name}/slab_135x_90y_225z.png",
+    )
+    plotThenSaveAtoms(
+        slab,
+        180,
+        180,
+        45,
+        ax,
+        f"images/{first_name}/{second_name}/slab_180x_180y_45z.png",
+    )
+    plotThenSaveAtoms(
+        slab,
+        225,
+        225,
+        35,
+        ax,
+        f"images/{first_name}/{second_name}/slab_225x_225y_35z.png",
+    )
+
+    images.append(
+        os.path.abspath(f"images/{first_name}/{second_name}/slab_135x_90y_225z.png")
+    )
+    images.append(
+        os.path.abspath(f"images/{first_name}/{second_name}/slab_180x_180y_45z.png")
+    )
+    images.append(
+        os.path.abspath(f"images/{first_name}/{second_name}/slab_225x_225y_35z.png")
+    )
+
+plt.close(fig)
+
+
+# # your images
+# images1 = [
+#     "https://vignette.wikia.nocookie.net/2007scape/images/7/7a/Mage%27s_book_detail.png/revision/latest?cb=20180310083825",
+#     "https://i.pinimg.com/originals/d9/5c/9b/d95c9ba809aa9dd4cb519a225af40f2b.png",
+# ]
+
+
+# images2 = [
+#     "https://static3.srcdn.com/wordpress/wp-content/uploads/2020/07/Quidditch.jpg?q=50&fit=crop&w=960&h=500&dpr=1.5",
+#     "https://specials-images.forbesimg.com/imageserve/5e160edc9318b800069388e8/960x0.jpg?fit=scale",
+# ]
+
+# df["imageUrls"] = images1
+# df["otherImageUrls"] = images2
+
+
+# # convert your links to html tags
+# def path_to_image_html(path):
+#     return '<img src="' + path + '" width="60" >'
+
+
+# pd.set_option("display.max_colwidth", None)
+
+# image_cols = [
+#     "imageUrls",
+#     "otherImageUrls",
+# ]  # <- define which columns will be used to convert to html
+
+# # Create the dictionariy to be passed as formatters
+# format_dict = {}
+# for image_col in image_cols:
+#     format_dict[image_col] = path_to_image_html
+
+
+df.to_html("data/H_atom_adsorption_energy.html")
+print(df)
+
 
 # # ex 6.2
 # energy = adsorptionEnergy("OSZICAR_H_WO3", "OSZICAR_WO3", "OSZICAR_H2")
@@ -702,19 +804,21 @@ cleanUp()
 
 # EX 7 - visualize
 
-# read(format="vasp-xdatcar")
-# shutil.rmtree("data")
-# os.mkdir("data")
+# shutil.rmtree("dataa")
+# os.mkdir("dataa")
 # fig, ax = plt.subplots()
 
 # for x in [0, 45, 90, 135, 180, 225, 270, 315]:
 #     for y in [0, 45, 90, 135, 180, 225, 270, 315]:
 #         for z in [0, 45, 90, 135, 180, 225, 270, 315]:
-#             output_file = f"data/slab_{x}x_{y}y_{z}z.png"
-#             plot_atoms(slab, ax, rotation=f"{x}x,{y}y,{z}z")
-#             ax.set_axis_off()
-#             plt.savefig(output_file, bbox_inches="tight", pad_inches=0.1, dpi=300)
-#             plt.cla()
+# x = 190
+# y = 170
+# z = 270
+# output_file = f"data/slab_{x}x_{y}y_{z}z.png"
+# plot_atoms(slab, ax, rotation=f"{x}x,{y}y,{z}z",)
+# ax.set_axis_off()
+# plt.savefig(output_file, bbox_inches="tight", pad_inches=0.1, dpi=300)
+# # plt.cla()
 # plt.close(fig)
 
 # print(f"Slab visualization saved to {output_file}")
@@ -735,14 +839,14 @@ cleanUp()
 
 # ex 9 - full ex 1
 
-fileName = add_n2_vacancy(
-    slab.copy(), n2.copy(), height_above_slab, "O", 0, "upright", 0
-)
-print(fileName)
-generateSimulationFolders(
-    fileName, "N2_WO3_x2y2_V", templateFolderName="templates_W001_x2y2"
-)
-replacePOTCARfromHtoN("N2_WO3_x2y2_V")
+# fileName = add_n2_vacancy(
+#     slab.copy(), n2.copy(), height_above_slab, "O", 0, "upright", 0
+# )
+# print(fileName)
+# generateSimulationFolders(
+#     fileName, "N2_WO3_x2y2_V", templateFolderName="templates_W001_x2y2"
+# )
+# replacePOTCARfromHtoN("N2_WO3_x2y2_V")
 # generateSlabVac(large_slab, "O", 0)
 
 print("----done----")
