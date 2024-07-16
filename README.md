@@ -7,4 +7,4 @@ More about VASP [here](https://www.vasp.at/)
 - more to come
 
 ## Directory example
-![[https://github.com/EDED2314/VASP-scripts/blob/main/Directory%20Example.png]]
+![https://github.com/EDED2314/VASP-scripts/blob/main/Directory%20Example.png]
