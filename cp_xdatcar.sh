@@ -24,3 +24,4 @@ for SUBDIR in "$SOURCE_DIR"/*; do
 done
 
 zip -r "$DEST_DIR".zip $DEST_DIR
+rm -rf $DEST_DIR
