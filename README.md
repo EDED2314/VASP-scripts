@@ -8,3 +8,6 @@ More about VASP [here](https://www.vasp.at/)
 
 ## Directory example
 ![Image](https://github.com/EDED2314/VASP-scripts/blob/main/Directory%20Example.png)
+
+## HTML output example
+
