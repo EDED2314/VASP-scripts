@@ -680,7 +680,7 @@ def addContcarImagesToDf(
         os.mkdir(f"images/{POSCAR_DIRECTORY}_POSCAR/{name}")
 
         plotThenSaveAtoms(
-            slab,
+            initSlab,
             135,
             90,
             225,
@@ -688,7 +688,7 @@ def addContcarImagesToDf(
             f"images/{POSCAR_DIRECTORY}_POSCAR/{name}/slab_135x_90y_225z.png",
         )
         plotThenSaveAtoms(
-            slab,
+            initSlab,
             180,
             180,
             45,
@@ -696,7 +696,7 @@ def addContcarImagesToDf(
             f"images/{POSCAR_DIRECTORY}_POSCAR/{name}/slab_180x_180y_45z.png",
         )
         plotThenSaveAtoms(
-            slab,
+            initSlab,
             225,
             225,
             35,
@@ -742,15 +742,30 @@ def addContcarImagesToDf(
 
     plt.close(fig)
 
+    initImages1.sort()
+    initImages2.sort()
+    initImages3.sort()
+
     images1.sort()
     images2.sort()
     images3.sort()
 
-    df["angle1"] = images2
-    df["angle2"] = images1
-    df["angle3"] = images3
+    df["initialAngle1"] = initImages2
+    df["initialAngle2"] = initImages1
+    df["initialAngle3"] = initImages3
 
-    image_cols = ["angle1", "angle2", "angle3"]
+    df["finalAngle1"] = images2
+    df["finalAngle2"] = images1
+    df["finalAngle3"] = images3
+
+    image_cols = [
+        "initialAngle1",
+        "initialAngle2",
+        "initialAngle3",
+        "finalAngle1",
+        "finalAngle2",
+        "finalAngle3",
+    ]
 
     format_dict = {}
     for image_col in image_cols:
