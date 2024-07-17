@@ -21,51 +21,6 @@ More about VASP [here](https://www.vasp.at/)
 ## Local Workspace Reference Tree
 ```
 .
-├── Archive_WO3_b
-│   ├── 2_H
-│   │   └── O0
-│   ├── H
-│   │   ├── Avg-O014
-│   │   ├── Avg-O235
-│   │   ├── O0
-│   │   ├── O1
-│   │   ├── O2
-│   │   ├── O3
-│   │   ├── O4
-│   │   ├── O5
-│   │   ├── W0
-│   │   ├── W1
-│   │   └── W2
-│   ├── H2O
-│   │   ├── V-O0-CD
-│   │   ├── V-O0-CL
-│   │   ├── V-O0-CR
-│   │   ├── V-O0-CU
-│   │   ├── V-O0-H2D
-│   │   ├── V-O0-HDD
-│   │   ├── V-O0-HDL
-│   │   ├── V-O0-HDR
-│   │   ├── V-O0-HDU
-│   │   └── V-O0-OD
-│   ├── H2O-2H-WO3-V
-│   │   └── O0
-│   ├── H_x2y2
-│   │   └── O0
-│   ├── N2
-│   │   ├── V-O0-CD
-│   │   ├── V-O0-CL
-│   │   ├── V-O0-CR
-│   │   ├── V-O0-CU
-│   │   └── V-O0-UPR
-│   ├── N2_x2y2_V
-│   │   └── V-O0-UPR
-│   ├── POST
-│   │   ├── H2O_V
-│   │   ├── H_POST
-│   │   └── N2_V
-│   ├── POSTCONTCAR
-│   │   └── H_CONTCAR
-│   └── surface
 ├── H
 │   ├── 1stLayer
 │   │   ├── O0
