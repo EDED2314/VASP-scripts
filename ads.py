@@ -245,22 +245,23 @@ def getSurfaceAtoms(symbol, index, slab):
     return atom_list
 
 
-def get_bottom_two_layers(slab):
+def get_bottom_n_z_layers(slab, n: int):
     # Get all z positions of the atoms
     z_positions = [atom.position[2] for atom in slab]
     z_positions.sort()
 
     # Find the unique z positions and identify the bottom two layers
+
     unique_z = np.unique(z_positions)
-    bottom_two_layers_z = unique_z[:2]
+    bottom_two_layers_z = unique_z[:n]
 
     # Get atoms in the bottom two layers
-    bottom_two_layers_atoms = []
+    atoms = []
     for atom in slab:
         if atom.position[2] in bottom_two_layers_z:
-            bottom_two_layers_atoms.append(atom.index)
+            atoms.append(atom.index)
 
-    return bottom_two_layers_atoms
+    return atoms
 
 
 def generateSlabVac(slab, symbol, index):
@@ -829,8 +830,8 @@ cleanUp()
 # generateSlabVac(large_slab.copy(), "O", 0)
 
 # Ex 0.2
-# slab = read("../backupPSCR", format="vasp")
-# fixed_atoms_indices = get_bottom_two_layers(slab)
+# slab = read("backupPSCR", format="vasp")
+# fixed_atoms_indices = get_bottom_n_z_layers(slab, 4)
 # constraint = FixAtoms(indices=fixed_atoms_indices)
 # slab.set_constraint(constraint)
 # write("CONTCAR_fixed", slab)
@@ -850,13 +851,13 @@ cleanUp()
 # print(fileName)
 # generateSimulationFolders(fileName, )
 
-fileName = add_h(
-    large_slab.copy(), h.copy(), height_above_slab, "O", 0, dis_x=0, dis_y=0
-)
-print(fileName)
-generateSimulationFolders(
-    fileName, "H_x2y2", templateFolderName="templates_W001_x2y2", trailString="LG"
-)
+# fileName = add_h(
+#     large_slab.copy(), h.copy(), height_above_slab, "O", 0, dis_x=0, dis_y=0
+# )
+# print(fileName)
+# generateSimulationFolders(
+#     fileName, "H_x2y2", templateFolderName="templates_W001_x2y2", trailString="LG"
+# )
 
 
 # EX 2
