@@ -27,7 +27,7 @@ read -p "Enter the file type to search for (e.g., XDATCAR, OSZICAR, etc.): " FIL
 read -p "Enter the directory name (e.g. H): " SOURCE_DIR
 
 #Change this for the folder that saves the oszicar files
-DEST_DIR="H_${FILE_TYPE}"
+DEST_DIR="${SOURCE_DIR}_${FILE_TYPE}"
 
 # Create the destination directory if it doesn't exist
 mkdir -p "$DEST_DIR"
