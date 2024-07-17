@@ -131,129 +131,28 @@ More about VASP [here](https://www.vasp.at/)
 │   ├── H
 │   │   ├── 1stLayer
 │   │   │   ├── O0
-│   │   │   │   ├── gpu.slurm
-│   │   │   │   ├── INCAR
-│   │   │   │   ├── KPOINTS
-│   │   │   │   ├── POSCAR
-│   │   │   │   └── POTCAR
 │   │   │   ├── O1
-│   │   │   │   ├── gpu.slurm
-│   │   │   │   ├── INCAR
-│   │   │   │   ├── KPOINTS
-│   │   │   │   ├── POSCAR
-│   │   │   │   └── POTCAR
 │   │   │   ├── O2
-│   │   │   │   ├── gpu.slurm
-│   │   │   │   ├── INCAR
-│   │   │   │   ├── KPOINTS
-│   │   │   │   ├── POSCAR
-│   │   │   │   └── POTCAR
 │   │   │   └── P0.0
-│   │   │       ├── gpu.slurm
-│   │   │       ├── INCAR
-│   │   │       ├── KPOINTS
-│   │   │       ├── POSCAR
-│   │   │       └── POTCAR
 │   │   └── 2ndLayer
 │   │       ├── O0
-│   │       │   ├── gpu.slurm
-│   │       │   ├── INCAR
-│   │       │   ├── KPOINTS
-│   │       │   ├── POSCAR
-│   │       │   └── POTCAR
 │   │       ├── O1
-│   │       │   ├── gpu.slurm
-│   │       │   ├── INCAR
-│   │       │   ├── KPOINTS
-│   │       │   ├── POSCAR
-│   │       │   └── POTCAR
 │   │       ├── O2
-│   │       │   ├── gpu.slurm
-│   │       │   ├── INCAR
-│   │       │   ├── KPOINTS
-│   │       │   ├── POSCAR
-│   │       │   └── POTCAR
 │   │       ├── O3
-│   │       │   ├── gpu.slurm
-│   │       │   ├── INCAR
-│   │       │   ├── KPOINTS
-│   │       │   ├── POSCAR
-│   │       │   └── POTCAR
 │   │       ├── O4
-│   │       │   ├── gpu.slurm
-│   │       │   ├── INCAR
-│   │       │   ├── KPOINTS
-│   │       │   ├── POSCAR
-│   │       │   └── POTCAR
 │   │       └── O5
-│   │           ├── gpu.slurm
-│   │           ├── INCAR
-│   │           ├── KPOINTS
-│   │           ├── POSCAR
-│   │           └── POTCAR
 │   ├── H2O
 │   │   ├── V-O0-OD
-│   │   │   ├── gpu.slurm
-│   │   │   ├── INCAR
-│   │   │   ├── KPOINTS
-│   │   │   ├── POSCAR
-│   │   │   └── POTCAR
 │   │   ├── V-O1-OD
-│   │   │   ├── gpu.slurm
-│   │   │   ├── INCAR
-│   │   │   ├── KPOINTS
-│   │   │   ├── POSCAR
-│   │   │   └── POTCAR
 │   │   ├── V-O2-OD
-│   │   │   ├── gpu.slurm
-│   │   │   ├── INCAR
-│   │   │   ├── KPOINTS
-│   │   │   ├── POSCAR
-│   │   │   └── POTCAR
 │   │   └── V-P0.0-OD
-│   │       ├── gpu.slurm
-│   │       ├── INCAR
-│   │       ├── KPOINTS
-│   │       ├── POSCAR
-│   │       └── POTCAR
 │   └── N2
-│       ├── N_POTCAR
 │       ├── V-O0-UPR
-│       │   ├── gpu.slurm
-│       │   ├── INCAR
-│       │   ├── KPOINTS
-│       │   ├── POSCAR
-│       │   └── POTCAR
 │       ├── V-O1-UPR
-│       │   ├── gpu.slurm
-│       │   ├── INCAR
-│       │   ├── KPOINTS
-│       │   ├── POSCAR
-│       │   └── POTCAR
 │       └── V-O2-UPR
-│           ├── gpu.slurm
-│           ├── INCAR
-│           ├── KPOINTS
-│           ├── POSCAR
-│           └── POTCAR
 ├── surface_v
 │   ├── O0
-│   │   ├── gpu.slurm
-│   │   ├── INCAR
-│   │   ├── KPOINTS
-│   │   ├── POSCAR
-│   │   └── POTCAR
 │   ├── O1
-│   │   ├── gpu.slurm
-│   │   ├── INCAR
-│   │   ├── KPOINTS
-│   │   ├── POSCAR
-│   │   └── POTCAR
 │   └── O2
-│       ├── gpu.slurm
-│       ├── INCAR
-│       ├── KPOINTS
-│       ├── POSCAR
-│       └── POTCAR
 └── vac
 ```
