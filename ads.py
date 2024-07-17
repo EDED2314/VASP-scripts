@@ -841,7 +841,7 @@ cleanUp()
 
 # EX 0
 # EX 0.1
-# generateSlabVac(slab.copy(), "O", 0)
+# generateSlabVac(slab.copy(), "O", 2)
 # generateSlabVac(large_slab.copy(), "O", 0)
 
 # Ex 0.2 - adjusting for the top layer of atoms instead of bottom layer (WO2)
@@ -907,7 +907,7 @@ cleanUp()
 
 # Ex 3.2 N2 on a WO3 normal unit cell.
 # fileName = add_n2_vacancy(
-#     slab.copy(), n2.copy(), height_above_slab_for_vacancies, "O", 0, "upright", 0
+#     slab.copy(), n2.copy(), height_above_slab_for_vacancies, "O", 2, "upright", 0
 # )
 # print(fileName)
 # generateSimulationFolders(fileName)
