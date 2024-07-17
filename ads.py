@@ -446,6 +446,7 @@ def add_n2_vacancy(
 
     if orientation == "upright":
         fileName += "UPR"
+        n2.rotate(180, "x")
         pass
     elif orientation == "coplanar":
         fileName += "C"
@@ -830,7 +831,9 @@ def addShortestThreeBondLengthsToDf(
 slab = read("CNST_CONTCAR_WO3_T")
 large_slab = read("CNST_PSCR_WO3_LARGE", format="vasp")
 emptyCell = read("CNST_CONTCAR_EMPTY")
+old_height_above_slab = 2.2
 height_above_slab = 1.5
+height_above_slab_for_vacancies = 0.5
 triangle_1 = [0, 1, 4]
 triangle_2 = [2, 3, 5]
 
@@ -885,13 +888,14 @@ cleanUp()
 # generateSimulationFolders(fileName, trailString="L2")
 
 # EX 2
-fileName = add_h2o_vacancy(slab.copy(), h2o.copy(), height_above_slab, "O", 0, "O_down")
-print(fileName)
-generateSimulationFolders(fileName)
+# fileName = add_h2o_vacancy(
+#     slab.copy(), h2o.copy(), height_above_slab_for_vacancies, "O", 2, "O_down"
+# )
+# print(fileName)
+# generateSimulationFolders(fileName)
 
-# EX 3 TODO
-
-# # in reality it is no longer O0 but O smth else cuz its a bigger slab
+# EX 3
+# Ex 3.1 - N2 on a large cell surface TODO
 # fileName = add_n2_vacancy(
 #     slab.copy(), n2.copy(), height_above_slab, "O", 0, "upright", 0
 # )
@@ -901,7 +905,15 @@ generateSimulationFolders(fileName)
 # )
 # replacePOTCARfromHtoN("N2_x2y2_V")
 
-# Ex 4t
+# Ex 3.2 N2 on a WO3 normal unit cell.
+# fileName = add_n2_vacancy(
+#     slab.copy(), n2.copy(), height_above_slab_for_vacancies, "O", 0, "upright", 0
+# )
+# print(fileName)
+# generateSimulationFolders(fileName)
+# replacePOTCARfromHtoN("N2")
+
+# Ex 4 - adsorbents in vacuums (have to after generation modify the unit cell itself 🤷‍♂️)
 # generateAdsorbentInVacuum(emptyCell.copy(), h2o, "H2O")
 # generateAdsorbentInVacuum(emptyCell.copy(), h, "H")
 # generateAdsorbentInVacuum(emptyCell.copy(), n2, "N2")
