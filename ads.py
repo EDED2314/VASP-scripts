@@ -166,6 +166,7 @@ def find_average_of_symbol(symbol, idxs, slab, layer):
     points = []
 
     atom_list = getSurfaceAtoms(symbol, 0, slab, layer=layer)
+    atom_list = [atom.position for atom in atom_list]
 
     for idx in idxs:
         points.append(atom_list[idx])
@@ -218,7 +219,6 @@ def getSurfaceAtoms(symbol: str, index: int, slab, layer: int = -1):
     z_pos = [atom.position[2] for atom in available_atoms]
     z_pos = list(set(z_pos))
     z_pos.sort()
-    print(z_pos)
     z_wanted = z_pos[layer]
     for atom in available_atoms:
         if abs(atom.position[2] - z_wanted) < 1e-1:
@@ -874,9 +874,10 @@ cleanUp()
 # )
 
 
-fileName = add_h(slab.copy(), h.copy(), height_above_slab, "O", 2, layer=-2)
+fileName = add_h(slab.copy(), h.copy(), height_above_slab, "O", 5, layer=-2)
+# fileName = add_h(slab.copy(), h.copy(), height_above_slab, "W", 0, pos=(0, 0))
 print(fileName)
-generateSimulationFolders(fileName)
+generateSimulationFolders(fileName, trailString="L2")
 
 # EX 2
 # fileName = add_h2o_vacancy(slab.copy(), h2o.copy(), height_above_slab, "O", 0, "O_down")
