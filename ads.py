@@ -162,19 +162,10 @@ def genKpoints(fileName: str):
         return
 
 
-def find_average_of_symbol(symbol, idxs, slab):
+def find_average_of_symbol(symbol, idxs, slab, layer):
     points = []
 
-    available_atoms = []
-    for atom in slab:
-        if atom.symbol == symbol:
-            available_atoms.append(atom)
-
-    atom_list = []
-    z_max = max([atom.position[2] for atom in available_atoms])
-    for atom in available_atoms:
-        if abs(atom.position[2] - z_max) < 1e-1:
-            atom_list.append(atom.position)
+    atom_list = getSurfaceAtoms(symbol, 0, slab, layer=layer)
 
     for idx in idxs:
         points.append(atom_list[idx])
@@ -213,7 +204,7 @@ def remove_atom_at_position_on_surface(slabb, x, y, atom_type):
     slabb.pop(atom.index)
 
 
-def getSurfaceAtoms(symbol, index, slab):
+def getSurfaceAtoms(symbol: str, index: int, slab, layer: int = -1):
     available_atoms = []
     for atom in slab:
         if atom.symbol == symbol:
@@ -224,9 +215,13 @@ def getSurfaceAtoms(symbol, index, slab):
         raise ValueError
 
     atom_list = []
-    z_max = max([atom.position[2] for atom in available_atoms])
+    z_pos = [atom.position[2] for atom in available_atoms]
+    z_pos = list(set(z_pos))
+    z_pos.sort()
+    print(z_pos)
+    z_wanted = z_pos[layer]
     for atom in available_atoms:
-        if abs(atom.position[2] - z_max) < 1e-1:
+        if abs(atom.position[2] - z_wanted) < 1e-1:
             atom_list.append(atom)
 
     if len(atom_list) <= index:
@@ -278,17 +273,18 @@ def generateSlab(slab):
     genKpoints("POSCAR")
 
 
-def add_adsorbate_custom(
+def addAdsorbateCustom(
     slab,
     molecule,
-    height,
-    symbol,
-    index,
-    displacement_x=0,
-    displacement_y=0,
+    height: float,
+    symbol: str,
+    index: int,
+    displacement_x: float = 0,
+    displacement_y: float = 0,
     vacancy=False,
     idxs=[],
     overridePos=None,
+    layer: int = -1,
 ):
 
     # Determine x,y
@@ -298,7 +294,7 @@ def add_adsorbate_custom(
         y = overridePos[1]
     else:
         if len(idxs) == 0:
-            atom_list = getSurfaceAtoms(symbol, index, slab)
+            atom_list = getSurfaceAtoms(symbol, index, slab, layer)
 
             x = atom_list[index].position[0]
             y = atom_list[index].position[1]
@@ -306,7 +302,7 @@ def add_adsorbate_custom(
                 remove_atom_at_position_on_surface(slab, x, y, "O")
 
         else:
-            x, y = find_average_of_symbol(symbol, idxs, slab)
+            x, y = find_average_of_symbol(symbol, idxs, slab, layer)
 
     add_adsorbate(
         slab,
@@ -319,7 +315,9 @@ def add_adsorbate_custom(
     )
 
 
-def add_h(slab, h, height, symbol, index, dis_x=0, dis_y=0, idxs=[], pos=None):
+def add_h(
+    slab, h, height, symbol, index, dis_x=0, dis_y=0, idxs=[], pos=None, layer=-1
+):
     fileName = f"POSCAR_H_above_{symbol}{index}"
     if 3 >= len(idxs) > 0:
         strIdxs = [str(idx) for idx in idxs]
@@ -330,8 +328,17 @@ def add_h(slab, h, height, symbol, index, dis_x=0, dis_y=0, idxs=[], pos=None):
             f"{bcolors.FAIL}Can only do average of three atoms' indices{bcolors.ENDC}"
         )
         return
-    add_adsorbate_custom(
-        slab, h, height, symbol, index, dis_x, dis_y, idxs=idxs, overridePos=pos
+    addAdsorbateCustom(
+        slab,
+        h,
+        height,
+        symbol,
+        index,
+        dis_x,
+        dis_y,
+        idxs=idxs,
+        overridePos=pos,
+        layer=layer,
     )
     write(fileName, slab, format="vasp")
     genKpoints(fileName)
@@ -340,7 +347,7 @@ def add_h(slab, h, height, symbol, index, dis_x=0, dis_y=0, idxs=[], pos=None):
 
 def add_n(slab, n, height, symbol, index, dis_x=0, dis_y=0, pos=None):
     fileName = f"POSCAR_N_above_{symbol}{index}"
-    add_adsorbate_custom(slab, n, height, symbol, index, dis_x, dis_y, overridePos=pos)
+    addAdsorbateCustom(slab, n, height, symbol, index, dis_x, dis_y, overridePos=pos)
     write(fileName, slab, format="vasp")
     genKpoints(fileName)
     return fileName
@@ -348,7 +355,7 @@ def add_n(slab, n, height, symbol, index, dis_x=0, dis_y=0, pos=None):
 
 def add_h2(slab, h2, height, symbol, index, dis_x=0, dis_y=0, pos=None):
     fileName = f"POSCAR_H2_above_{symbol}{index}"
-    add_adsorbate_custom(slab, h2, height, symbol, index, dis_x, dis_y, overridePos=pos)
+    addAdsorbateCustom(slab, h2, height, symbol, index, dis_x, dis_y, overridePos=pos)
     write(fileName, slab, format="vasp")
     genKpoints(fileName)
     return fileName
@@ -409,7 +416,7 @@ def add_h2o_vacancy(
         else:
             fileName += "X"
 
-    add_adsorbate_custom(
+    addAdsorbateCustom(
         slab,
         h2o,
         height,
@@ -450,7 +457,7 @@ def add_n2_vacancy(
         else:
             fileName += "X"
 
-    add_adsorbate_custom(slab, n2, height, symbol, index, vacancy=True, overridePos=pos)
+    addAdsorbateCustom(slab, n2, height, symbol, index, vacancy=True, overridePos=pos)
     write(fileName, slab, format="vasp")
     genKpoints(fileName)
     return fileName
@@ -791,7 +798,7 @@ def getInitialXYfromDfAtoms(df, symbol: str, key: str, slab):
         else:
             indices = name.split(symbol)[1]
             x, y = find_average_of_symbol(
-                symbol, [int(idx) for idx in list(indices)], slab
+                symbol, [int(idx) for idx in list(indices)], slab, -2
             )
 
         xypairs.append((x, y))
@@ -815,10 +822,10 @@ def addShortestThreeBondLengthsToDf(
     return refKey
 
 
-slab = read("CNST_CONTCAR_WO3")
+slab = read("CNST_CONTCAR_WO3_T")
 large_slab = read("CNST_PSCR_WO3_LARGE", format="vasp")
 emptyCell = read("CNST_CONTCAR_EMPTY")
-height_above_slab = 2.2
+height_above_slab = 1.5
 triangle_1 = [0, 1, 4]
 triangle_2 = [2, 3, 5]
 
@@ -866,6 +873,10 @@ cleanUp()
 #     fileName, "H_x2y2", templateFolderName="templates_W001_x2y2", trailString="LG"
 # )
 
+
+fileName = add_h(slab.copy(), h.copy(), height_above_slab, "O", 2, layer=-2)
+print(fileName)
+generateSimulationFolders(fileName)
 
 # EX 2
 # fileName = add_h2o_vacancy(slab.copy(), h2o.copy(), height_above_slab, "O", 0, "O_down")
