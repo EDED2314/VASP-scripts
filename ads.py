@@ -201,8 +201,13 @@ def remove_atom_at_position_on_surface(slabb, x, y, atom_type):
     if len(atoms_to_remove) == 0:
         print("Did not find atom")
         return
-    atom = atoms_to_remove[-1]
-    slabb.pop(atom.index)
+
+    atom_selected = atoms_to_remove[0]
+    for atom_want in atoms_to_remove:
+        if atom_want.position[2] > atom_selected.position[2]:
+            atom_selected = atom_want
+
+    slabb.pop(atom_selected.index)
 
 
 def getSurfaceAtoms(symbol: str, index: int, slab, layer: int = -1):
@@ -874,15 +879,15 @@ cleanUp()
 # )
 
 
-fileName = add_h(slab.copy(), h.copy(), height_above_slab, "O", 5, layer=-2)
+# fileName = add_h(slab.copy(), h.copy(), height_above_slab, "O", 6, layer=-2)
 # fileName = add_h(slab.copy(), h.copy(), height_above_slab, "W", 0, pos=(0, 0))
-print(fileName)
-generateSimulationFolders(fileName, trailString="L2")
+# print(fileName)
+# generateSimulationFolders(fileName, trailString="L2")
 
 # EX 2
-# fileName = add_h2o_vacancy(slab.copy(), h2o.copy(), height_above_slab, "O", 0, "O_down")
-# print(fileName)
-# generateSimulationFolders(fileName)
+fileName = add_h2o_vacancy(slab.copy(), h2o.copy(), height_above_slab, "O", 0, "O_down")
+print(fileName)
+generateSimulationFolders(fileName)
 
 # EX 3 TODO
 
