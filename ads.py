@@ -812,13 +812,13 @@ def getInitialXYfromDfAtoms(df, symbol: str, key: str, slab):
 
 
 def addShortestThreeBondLengthsToDf(
-    df, key: str, symbol1: str, symbol2: str, CONTCAR_DIRECTORY: str
+    df, key: str, symbol1: str, symbol2: str, directory: str, starting: str
 ):
     names = df[key]
     formatted_list = []
     for name in names:
-        fileName = "CONTCAR_" + name
-        slab = read(f"{CONTCAR_DIRECTORY}/{fileName}")
+        fileName = starting + "_" + name
+        slab = read(f"{directory}/{fileName}")
         _, dis = calculateDistancesForEachAtomPair(slab.copy(), symbol1, symbol2)
         formatted = f"{dis[0]}<br>{dis[1]}<br>{dis[2]}"
         formatted_list.append(formatted)
@@ -1018,9 +1018,9 @@ def generateHStuff():
 
     df, format_dict = addContcarImagesToDf(df, H_post_contcar, "H", key, override=True)
 
-    refKey = addShortestThreeBondLengthsToDf(df, key, "H", "O", H_post_contcar)
+    refKey = addShortestThreeBondLengthsToDf(df, key, "H", "O", H_post_contcar, "CONTCAR")
     df.insert(2, refKey, df.pop(refKey))
-    refKey = addShortestThreeBondLengthsToDf(df, key, "H", "W", H_post_contcar)
+    refKey = addShortestThreeBondLengthsToDf(df, key, "H", "W", H_post_contcar, "CONTCAR")
     df.insert(2, refKey, df.pop(refKey))
 
     df.to_html(
