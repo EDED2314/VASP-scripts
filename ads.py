@@ -829,13 +829,20 @@ cleanUp()
 # generateSlabVac(slab.copy(), "O", 0)
 # generateSlabVac(large_slab.copy(), "O", 0)
 
-# Ex 0.2
+# Ex 0.2 - adjusting for the top layer of atoms instead of bottom layer (WO2)
+
 # slab = read("backupPSCR", format="vasp")
+
+# positions = slab.get_positions()
+# positions[:, 2] += abs(np.min(positions[:, 2])) + 2.02
+# slab.set_positions(positions)
+
 # fixed_atoms_indices = get_bottom_n_z_layers(slab, 4)
 # constraint = FixAtoms(indices=fixed_atoms_indices)
 # slab.set_constraint(constraint)
-# write("CONTCAR_fixed", slab)
 # print(f"Fixed atoms indices: {fixed_atoms_indices}")
+# write("POSCAR_modified", slab)
+
 
 # EX 1
 # newSlab = read("CNST_CONTCAR_H_WO3_TEST")
