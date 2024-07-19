@@ -1,4 +1,4 @@
-# plot_reaction_coordinates() repurposed from https://corinwagen.github.io/public/blog/20220905_pypes.html
+# plot_potential_surface() repurposed from https://corinwagen.github.io/public/blog/20220905_pypes.html
 
 
 # get packages
@@ -7,8 +7,12 @@ import scipy.interpolate as interp
 import matplotlib.pyplot as plt
 
 
-def plot_reaction_coordinates(
-    X, Y, labels, xlabel: str = "Reaction Coordinate", ylabel: str = "Free Energy (eV)"
+def plot_potential_surface(
+    X,
+    Y,
+    labels,
+    xlabel: str = "Reaction Coordinate",
+    ylabel: str = "Potential Energy (eV)",
 ):
     """
     x and y positions. y in any units you want, if you want, and x in the range [0,1].
