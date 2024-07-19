@@ -878,13 +878,15 @@ cleanUp()
 # print(fileName)
 # generateSimulationFolders(fileName, )
 
-# fileName = add_h(
-#     large_slab.copy(), h.copy(), height_above_slab, "O", 0, dis_x=0, dis_y=0
-# )
-# print(fileName)
-# generateSimulationFolders(
-#     fileName, "H_x2y2", templateFolderName="templates_W001_x2y2", trailString="LG"
-# )
+
+# for i in range(1, 4):
+#     fileName = add_h(
+#         large_slab.copy(), h.copy(), height_above_slab, "O", i, dis_x=0, dis_y=0
+#     )
+#     print(fileName)
+#     generateSimulationFolders(
+#         fileName, "H_x2y2", templateFolderName="templates_W001_x2y2", trailString="LG"
+#     )
 
 # fileName = add_h(slab.copy(), h.copy(), height_above_slab, "W", 0, pos=(0, 0))
 # generateSimulationFolders(fileName, trailString="")
@@ -909,16 +911,30 @@ cleanUp()
 #     print(fileName)
 #     generateSimulationFolders(fileName)
 
+# for i in range(1, 4):
+#     fileName = add_h2o_vacancy(
+#         large_slab.copy(), h2o.copy(), height_above_slab_for_vacancies, "O", i, "O_down"
+#     )
+#     print(fileName)
+#     generateSimulationFolders(
+#         fileName, "H2O_x2y2", templateFolderName="templates_W001_x2y2", trailString="LG"
+#     )
+
+
 # EX 3
-# Ex 3.1 - N2 on a large cell surface TODO
+# UNIT cell - 4 N2 vs 1 N2 vs 2 N2 ... this is for 2 N2 in the unit cell
+# large = large_slab.copy()
 # fileName = add_n2_vacancy(
-#     slab.copy(), n2.copy(), height_above_slab_for_vacancies, "O", 0, "upright", 0
+#     large, n2.copy(), height_above_slab_for_vacancies, "O", 1, "upright", 0
+# )
+# fileName = add_n2_vacancy(
+#     large, n2.copy(), height_above_slab_for_vacancies, "O", 1, "upright", 0
 # )
 # print(fileName)
 # generateSimulationFolders(
-#     fileName, "N2_x2y2_V", templateFolderName="templates_W001_x2y2"
+#     fileName, "2N2_x2y2", templateFolderName="templates_W001_x2y2"
 # )
-# replacePOTCARfromHtoN("N2_x2y2_V")
+# replacePOTCARfromHtoN("2N2_x2y2")
 
 # Ex 3.2 N2 on a WO3 normal unit cell.
 # for i in range(3):
@@ -1098,8 +1114,8 @@ def generateN2Stuff():
     print(df)
 
 
-# generateHStuff("2nd")
+generateHStuff("1st")
 # generateH2OStuff()
-
+# generateN2Stuff()
 
 print("----done----")
