@@ -33,6 +33,8 @@ class bcolors:
 
 
 OUTPUT_DIR = "POSTOUTPUT"
+NAME_LABEL = "Orientation/Location Molecule Takes"
+ENERGY_LABEL = "Adsorption Energy (eV)"
 
 
 # Create the H2O molecule
@@ -1011,7 +1013,7 @@ cleanUp()
 def generateHStuff(layer: str):
     post = f"POSTOUTPUT/H_{layer}Layer_OSZICAR"
     post_contcar = f"POSTCONTCAR/H_{layer}Layer_CONTCAR"
-    key = "Orientation/Location Molecule Takes"
+    key = NAME_LABEL
     df = pd.DataFrame(
         adsorptionEnergiesOfFolder(
             post,
@@ -1019,18 +1021,13 @@ def generateHStuff(layer: str):
             "OSZICAR_H2",
             multi=0.5,
             name_label=key,
-            energy_label="Adsorption Energy (eV)",
+            energy_label=ENERGY_LABEL,
         )
     )
     df = df.sort_values(key)
     df = df.set_index(key)
     # df = df.drop("O0")  # didn't converge yet...
-    # df = df.drop("O2")
-    # df = df.drop("O3")
-    # df = df.drop("O4")
-    # df = df.drop("O5")
-    # df = df.drop("W2")
-    # df = df.drop("Avg-O235")
+    df = df.drop("P0.0")
     df = df.reset_index()
 
     df, format_dict = addContcarImagesToDf(df, post_contcar, f"H/{layer}Layer", key)
@@ -1044,30 +1041,33 @@ def generateHStuff(layer: str):
         "data/H_atom_adsorption_energy.html", escape=False, formatters=format_dict
     )
     print(df)
+    return df
 
 
-def generateH2OStuff():
+def generateH2OStuff(mode: int = 1):
     post = "POSTOUTPUT/H2O_OSZICAR"
     post_contcar = "POSTCONTCAR/H2O_CONTCAR"
-    key = "Orientation/Location Molecule Takes"
-    df = pd.DataFrame(
-        adsorptionEnergiesOfFolder(
-            post,
-            "OSZICAR_WO3",
-            "OSZICAR_H2",
-            name_label=key,
-            energy_label="Adsorption Energy (eV)",
+    key = NAME_LABEL
+    if mode == 1:
+        df = pd.DataFrame(
+            adsorptionEnergiesOfFolder(
+                post,
+                "OSZICAR_WO3",
+                "OSZICAR_H2",
+                name_label=key,
+                energy_label=ENERGY_LABEL,
+            )
         )
-    )
-    # df = pd.DataFrame(
-    #     adsorptionEnergiesOfFolder(
-    #         post,
-    #         "OSZICAR_WO3",
-    #         "OSZICAR_H2",
-    #         name_label=key,
-    #         energy_label="Adsorption Energy (eV)",
-    #     )
-    # )
+    else:
+        df = pd.DataFrame(
+            adsorptionEnergiesOfFolder(
+                post,
+                "OSZICAR_WO3_V_O0",
+                "OSZICAR_H2O",
+                name_label=key,
+                energy_label=ENERGY_LABEL,
+            )
+        )
     df = df.sort_values(key)
     df = df.set_index(key)
     # df = df.drop("V-O2-OD")  # didn't converge :(
@@ -1082,21 +1082,24 @@ def generateH2OStuff():
     refKey = addShortestThreeBondLengthsToDf(df, key, "O", "W", post_contcar, "CONTCAR")
     df.insert(2, refKey, df.pop(refKey))
 
-    df.to_html("data/H2O_adsorption_energy.html", escape=False, formatters=format_dict)
+    df.to_html(
+        f"data/H2O_adsorption_energy_{mode}.html", escape=False, formatters=format_dict
+    )
     print(df)
+    return df
 
 
 def generateN2Stuff():
     post = "POSTOUTPUT/N2_OSZICAR"
     post_contcar = "POSTCONTCAR/N2_CONTCAR"
-    key = "Orientation/Location Molecule Takes"
+    key = NAME_LABEL
     df = pd.DataFrame(
         adsorptionEnergiesOfFolder(
             post,
             "OSZICAR_WO3_V_O0",
             "OSZICAR_N2",
             name_label=key,
-            energy_label="Adsorption Energy (eV)",
+            energy_label=ENERGY_LABEL,
         )
     )
     df = df.sort_values(key)
@@ -1112,10 +1115,43 @@ def generateN2Stuff():
 
     df.to_html("data/N2_adsorption_energy.html", escape=False, formatters=format_dict)
     print(df)
+    return df
 
 
-generateHStuff("1st")
-# generateH2OStuff()
-# generateN2Stuff()
+h_wo3_df = generateHStuff("1st")
+h2_wo3_df = generateH2OStuff()
+h2ovwo3_df = generateH2OStuff(mode=2)
+n2_v_wo3_df = generateN2Stuff()
+
+# -------------------------------------------
+
+from reaction_coordinate_plotter import plot_reaction_coordinates
+
+avg_energies1 = sum(h_wo3_df[ENERGY_LABEL]) / len(h_wo3_df[ENERGY_LABEL])
+avg_energies2 = sum(h2_wo3_df[ENERGY_LABEL]) / len(h2_wo3_df[ENERGY_LABEL])
+avg_energies3 = sum(h2ovwo3_df[ENERGY_LABEL]) / len(h2ovwo3_df[ENERGY_LABEL])
+avg_energies4 = sum(n2_v_wo3_df[ENERGY_LABEL]) / len(n2_v_wo3_df[ENERGY_LABEL])
+
+print(avg_energies1)
+print(avg_energies2)
+print(avg_energies3)
+print(avg_energies4)
+
+
+plot_reaction_coordinates(
+    [0, 0.5, 1],
+    [avg_energies1, avg_energies2, avg_energies3],
+    [
+        f"(WO3)xH\n{str(avg_energies1)[:5]}",
+        f"(WO3)xH2\n{str(avg_energies2)[:5]}",
+        f"(WO3)xH2O\n{str(avg_energies3)[:5]}",
+    ],
+    ylabel="Adsorption Energy(eV)",
+)
+
+
+
+# -------------------------------------------
+
 
 print("----done----")
