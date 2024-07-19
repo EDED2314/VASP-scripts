@@ -596,24 +596,25 @@ def calculateDistancesForEachAtomPair(slab, symbol1, symbol2, radius1=0.0, radiu
     datas = []
     for i in range(len(slab)):
         for k in range(i + 1, len(slab)):
-            data = {}
-
-            point1 = slab[i].position
-            point2 = slab[k].position
-
-            data["dis"] = euclidean(point1, point2)
-            data["sym1"] = slab[i].symbol
-            data["sym2"] = slab[k].symbol
-            data["idx1"] = slab[i].index
-            data["idx2"] = slab[k].index
             if (slab[k].symbol == symbol1 and slab[i].symbol == symbol2) or (
                 slab[k].symbol == symbol2 and slab[i].symbol == symbol1
             ):
+                data = {}
+
+                point1 = slab[i].position
+                point2 = slab[k].position
+
+                data["dis"] = euclidean(point1, point2)
+                data["sym1"] = slab[i].symbol
+                data["sym2"] = slab[k].symbol
+                data["idx1"] = slab[i].index
+                data["idx2"] = slab[k].index
+
                 datas.append(data)
 
     dis = []
     for _, pair in enumerate(datas):
-        dis.append(pair["dis"] - (radius1 + radius2))
+        dis.append(pair["dis"])
     dis.sort()
 
     return datas, dis
@@ -653,9 +654,9 @@ def addContcarImagesToDf(
         slab = read(f"{CONTCAR_DIRECTORY}/{fileName}")
 
         if not os.path.exists(f"images/{first_name}"):
-            os.mkdir(f"images/{first_name}")
+            os.makedirs(f"images/{first_name}")
         if not os.path.exists(f"images/{POSCAR_DIRECTORY}_POSCAR"):
-            os.mkdir(f"images/{POSCAR_DIRECTORY}_POSCAR")
+            os.makedirs(f"images/{POSCAR_DIRECTORY}_POSCAR")
 
         if os.path.exists(f"images/{first_name}/{name}"):
             if override:
@@ -695,8 +696,8 @@ def addContcarImagesToDf(
                     )
                     continue
 
-        os.mkdir(f"images/{first_name}/{name}")
-        os.mkdir(f"images/{POSCAR_DIRECTORY}_POSCAR/{name}")
+        os.makedirs(f"images/{first_name}/{name}")
+        os.makedirs(f"images/{POSCAR_DIRECTORY}_POSCAR/{name}")
 
         plotThenSaveAtoms(
             initSlab,
@@ -1000,13 +1001,14 @@ def generateHStuff():
             post,
             "OSZICAR_WO3",
             "OSZICAR_H2",
+            multi=0.5,
             name_label=key,
             energy_label="Adsorption Energy (eV)",
         )
     )
     df = df.sort_values(key)
     df = df.set_index(key)
-    df = df.drop("O0") #didn't converge yet...
+    df = df.drop("O0")  # didn't converge yet...
     # df = df.drop("O2")
     # df = df.drop("O3")
     # df = df.drop("O4")
@@ -1015,7 +1017,9 @@ def generateHStuff():
     # df = df.drop("Avg-O235")
     df = df.reset_index()
 
-    df, format_dict = addContcarImagesToDf(df, post_contcar, "H", key, override=True)
+    df, format_dict = addContcarImagesToDf(
+        df, post_contcar, "H/1stLayer", key, override=True
+    )
 
     refKey = addShortestThreeBondLengthsToDf(df, key, "H", "O", post_contcar, "CONTCAR")
     df.insert(2, refKey, df.pop(refKey))
@@ -1041,18 +1045,21 @@ def generateH2OStuff():
             energy_label="Adsorption Energy (eV)",
         )
     )
+    # df = pd.DataFrame(
+    #     adsorptionEnergiesOfFolder(
+    #         post,
+    #         "OSZICAR_WO3",
+    #         "OSZICAR_H2",
+    #         name_label=key,
+    #         energy_label="Adsorption Energy (eV)",
+    #     )
+    # )
     df = df.sort_values(key)
     df = df.set_index(key)
-    # df = df.drop("O1")
-    # df = df.drop("O2")
-    # df = df.drop("O3")
-    # df = df.drop("O4")
-    # df = df.drop("O5")
-    # df = df.drop("W2")
-    # df = df.drop("Avg-O235")
+    # df = df.drop("V-O2-OD")  # didn't converge :(
     df = df.reset_index()
 
-    df, format_dict = addContcarImagesToDf(df, post_contcar, "H", key, override=True)
+    df, format_dict = addContcarImagesToDf(df, post_contcar, "H2O", key, override=False)
 
     refKey = addShortestThreeBondLengthsToDf(df, key, "H", "O", post_contcar, "CONTCAR")
     df.insert(2, refKey, df.pop(refKey))
@@ -1061,14 +1068,12 @@ def generateH2OStuff():
     refKey = addShortestThreeBondLengthsToDf(df, key, "O", "W", post_contcar, "CONTCAR")
     df.insert(2, refKey, df.pop(refKey))
 
-    df.to_html(
-        "data/H_atom_adsorption_energy.html", escape=False, formatters=format_dict
-    )
+    df.to_html("data/adsorption_energy.html", escape=False, formatters=format_dict)
     print(df)
 
 
+generateHStuff()
 generateH2OStuff()
-# generateHStuff()
 
 
 print("----done----")
