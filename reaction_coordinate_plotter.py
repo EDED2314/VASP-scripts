@@ -7,20 +7,18 @@ import scipy.interpolate as interp
 import matplotlib.pyplot as plt
 
 
-def plot_reaction_coordinates():
+def plot_reaction_coordinates(
+    X, Y, labels, xlabel: str = "Reaction Coordinate", ylabel: str = "Free Energy (eV)"
+):
+    """
+    x and y positions. y in any units you want, if you want, and x in the range [0,1].
 
-    # make matplotlib look good
-    plt.rc("font", size=11, family="serif")
-    plt.rc("axes", titlesize=12, labelsize=12)
-    plt.rc(["xtick", "ytick"], labelsize=11)
-    plt.rc("legend", fontsize=12)
-    plt.rc("figure", titlesize=14)
-
-    # x and y positions. y in kcal/mol, if you want, and x in the range [0,1].
     Y = [2.49, 3.5, 0, 20.2, 19, 21.5, 20, 20.3, -5]
+
     X = [0, 0.15, 0.3, 0.48, 0.55, 0.63, 0.70, 0.78, 1]
 
-    # labels for points. False if you don't want a label
+    labels for points. False if you don't want a label
+
     label = [
         "label1",
         False,
@@ -32,16 +30,22 @@ def plot_reaction_coordinates():
         "label7",
         "label8",
     ]
+    """
+    label = labels
 
-    #### shouldn't need to modify code below this point too much...
+    # make matplotlib look good
+    plt.rc("font", size=11, family="serif")
+    plt.rc("axes", titlesize=12, labelsize=12)
+    plt.rc(["xtick", "ytick"], labelsize=11)
+    plt.rc("legend", fontsize=12)
+    plt.rc("figure", titlesize=14)
 
-    # autodetect which labels correspond to transition states
     TS = []
     for idx in range(len(Y)):
         if idx == 0 or idx == len(Y) - 1:
             TS.append(False)
         else:
-            TS.append((Y[idx] > Y[idx + 1]) and (Y[idx] > Y[idx - 1]))
+            TS.append((Y[idx] < Y[idx + 1]) and (Y[idx] < Y[idx - 1]))
 
     # sanity checks
     assert len(X) == len(Y), "need X and Y to match length"
@@ -62,8 +66,8 @@ def plot_reaction_coordinates():
     ax.plot(-0.1, YMAX, "^k", clip_on=False)
 
     # label axes
-    plt.ylabel("Gibbs Free Energy (kcal/mol)")
-    plt.xlabel("Reaction Coordinate")
+    plt.ylabel(ylabel)
+    plt.xlabel(xlabel)
 
     # plot the points
     plt.plot(X, Y, "o", markersize=7, c="black")
