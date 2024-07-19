@@ -992,41 +992,83 @@ cleanUp()
 
 
 def generateHStuff():
-    H_post = "POSTOUTPUT/H_POST"
-    H_post_contcar = "POSTCONTCAR/H_CONTCAR"
+    post = "POSTOUTPUT/H_OSZICAR"
+    post_contcar = "POSTCONTCAR/H_CONTCAR"
     key = "Orientation/Location Molecule Takes"
     df = pd.DataFrame(
         adsorptionEnergiesOfFolder(
-            H_post,
+            post,
             "OSZICAR_WO3",
             "OSZICAR_H2",
-            multi=0.5,
             name_label=key,
             energy_label="Adsorption Energy (eV)",
         )
     )
     df = df.sort_values(key)
     df = df.set_index(key)
-    df = df.drop("O1")
-    df = df.drop("O2")
-    df = df.drop("O3")
-    df = df.drop("O4")
-    df = df.drop("O5")
-    df = df.drop("W2")
-    df = df.drop("Avg-O235")
+    df = df.drop("O0") #didn't converge yet...
+    # df = df.drop("O2")
+    # df = df.drop("O3")
+    # df = df.drop("O4")
+    # df = df.drop("O5")
+    # df = df.drop("W2")
+    # df = df.drop("Avg-O235")
     df = df.reset_index()
 
-    df, format_dict = addContcarImagesToDf(df, H_post_contcar, "H", key, override=True)
+    df, format_dict = addContcarImagesToDf(df, post_contcar, "H", key, override=True)
 
-    refKey = addShortestThreeBondLengthsToDf(df, key, "H", "O", H_post_contcar, "CONTCAR")
+    refKey = addShortestThreeBondLengthsToDf(df, key, "H", "O", post_contcar, "CONTCAR")
     df.insert(2, refKey, df.pop(refKey))
-    refKey = addShortestThreeBondLengthsToDf(df, key, "H", "W", H_post_contcar, "CONTCAR")
+    refKey = addShortestThreeBondLengthsToDf(df, key, "H", "W", post_contcar, "CONTCAR")
     df.insert(2, refKey, df.pop(refKey))
 
     df.to_html(
         "data/H_atom_adsorption_energy.html", escape=False, formatters=format_dict
     )
     print(df)
+
+
+def generateH2OStuff():
+    post = "POSTOUTPUT/H2O_OSZICAR"
+    post_contcar = "POSTCONTCAR/H2O_CONTCAR"
+    key = "Orientation/Location Molecule Takes"
+    df = pd.DataFrame(
+        adsorptionEnergiesOfFolder(
+            post,
+            "OSZICAR_WO3",
+            "OSZICAR_H2",
+            name_label=key,
+            energy_label="Adsorption Energy (eV)",
+        )
+    )
+    df = df.sort_values(key)
+    df = df.set_index(key)
+    # df = df.drop("O1")
+    # df = df.drop("O2")
+    # df = df.drop("O3")
+    # df = df.drop("O4")
+    # df = df.drop("O5")
+    # df = df.drop("W2")
+    # df = df.drop("Avg-O235")
+    df = df.reset_index()
+
+    df, format_dict = addContcarImagesToDf(df, post_contcar, "H", key, override=True)
+
+    refKey = addShortestThreeBondLengthsToDf(df, key, "H", "O", post_contcar, "CONTCAR")
+    df.insert(2, refKey, df.pop(refKey))
+    refKey = addShortestThreeBondLengthsToDf(df, key, "H", "W", post_contcar, "CONTCAR")
+    df.insert(2, refKey, df.pop(refKey))
+    refKey = addShortestThreeBondLengthsToDf(df, key, "O", "W", post_contcar, "CONTCAR")
+    df.insert(2, refKey, df.pop(refKey))
+
+    df.to_html(
+        "data/H_atom_adsorption_energy.html", escape=False, formatters=format_dict
+    )
+    print(df)
+
+
+generateH2OStuff()
+# generateHStuff()
 
 
 print("----done----")
