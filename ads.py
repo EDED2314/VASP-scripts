@@ -992,9 +992,9 @@ cleanUp()
 # generateSlabVac(large_slab, "O", 0)
 
 
-def generateHStuff():
-    post = "POSTOUTPUT/H_OSZICAR"
-    post_contcar = "POSTCONTCAR/H_CONTCAR"
+def generateHStuff(layer:str):
+    post = f"POSTOUTPUT/H_{layer}Layer_OSZICAR"
+    post_contcar = f"POSTCONTCAR/H_{layer}Layer_CONTCAR"
     key = "Orientation/Location Molecule Takes"
     df = pd.DataFrame(
         adsorptionEnergiesOfFolder(
@@ -1017,9 +1017,7 @@ def generateHStuff():
     # df = df.drop("Avg-O235")
     df = df.reset_index()
 
-    df, format_dict = addContcarImagesToDf(
-        df, post_contcar, "H/1stLayer", key, override=True
-    )
+    df, format_dict = addContcarImagesToDf(df, post_contcar, f"H/{layer}Layer", key)
 
     refKey = addShortestThreeBondLengthsToDf(df, key, "H", "O", post_contcar, "CONTCAR")
     df.insert(2, refKey, df.pop(refKey))
@@ -1072,7 +1070,7 @@ def generateH2OStuff():
     print(df)
 
 
-generateHStuff()
+generateHStuff("2nd")
 generateH2OStuff()
 
 
