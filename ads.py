@@ -518,6 +518,18 @@ def generateAdsorbentInVacuum(empty, molecule_or_atom, symbol: str):
 
 
 # POST SIM ANALYSIS
+def readOszicarFileAndGetLastLineEnergy(fileName: str):
+    lines = []
+    with open(fileName) as f:
+        lines = f.readlines()
+
+    lastLine = lines[-1]
+    tmp = lastLine.split()
+    energy = float(tmp[2])
+
+    return energy
+
+
 def adsorptionEnergy(
     OSZICAR_BOTH,
     OSZICAR_SURF,
@@ -532,43 +544,23 @@ def adsorptionEnergy(
     Second param is the oszicar for the surface
     Third is for the adsorbate
     """
-    both = []
     bothDirectory = f"{OUTPUT_DIR}/{OSZICAR_BOTH}"
     if customPathBoth != "":
         bothDirectory = f"{customPathBoth}/{OSZICAR_BOTH}"
 
-    with open(bothDirectory) as f:
-        both = f.readlines()
-
-    surf = []
     surfDirectory = f"{OUTPUT_DIR}/{OSZICAR_SURF}"
     if customPathSurf != "":
         surfDirectory = f"{customPathSurf}/{OSZICAR_SURF}"
 
-    with open(surfDirectory) as f:
-        surf = f.readlines()
-
-    ads = []
     adsDirectory = f"{OUTPUT_DIR}/{OSZICAR_ADS}"
     if customPathAds != "":
         adsDirectory = f"{customPathAds}/{OSZICAR_ADS}"
 
-    with open(adsDirectory) as f:
-        ads = f.readlines()
+    energyBoth = readOszicarFileAndGetLastLineEnergy(bothDirectory)
+    energySurf = readOszicarFileAndGetLastLineEnergy(surfDirectory)
+    energyAds = adsMulti * readOszicarFileAndGetLastLineEnergy(adsDirectory)
 
-    lastLineBoth = both[-1]
-    lastLineSurf = surf[-1]
-    lastLineAds = ads[-1]
-
-    both = lastLineBoth.split()
-    surf = lastLineSurf.split()
-    ads = lastLineAds.split()
-
-    energyBoth = float(both[2])
-    energySurf = float(surf[2])
-    energyAds = adsMulti * float(ads[2])  # edit later
-
-    return energyBoth - (energySurf + energyAds)
+    return energyBoth - (energySurf + energyAds), energyBoth, energySurf, energyAds
 
 
 def adsorptionEnergiesOfFolder(
@@ -583,7 +575,7 @@ def adsorptionEnergiesOfFolder(
     for postFile in os.listdir(POST_DIRECTORY):
         data = {}
         data[name_label] = postFile.replace("OSZICAR_", "")
-        data[energy_label] = adsorptionEnergy(
+        data[energy_label], _, _, _ = adsorptionEnergy(
             postFile,
             OSZICAR_SURF,
             OSZICAR_ADS,
@@ -970,8 +962,8 @@ cleanUp()
 
 # EX 6
 # # ex 6.2
-# energy = adsorptionEnergy("OSZICAR_H_WO3", "OSZICAR_WO3", "OSZICAR_H2")
-# energy = adsorptionEnergy("OSZICAR_N2_WO3_V", "OSZICAR_WO3_V", "OSZICAR_N2")
+# energy, _, _, _ = adsorptionEnergy("OSZICAR_H_WO3", "OSZICAR_WO3", "OSZICAR_H2")
+# energy, _, _, _ = adsorptionEnergy("OSZICAR_N2_WO3_V", "OSZICAR_WO3_V", "OSZICAR_N2")
 # print(energy)
 
 
@@ -1118,38 +1110,59 @@ def generateN2Stuff():
     return df
 
 
-h_wo3_df = generateHStuff("1st")
-h2_wo3_df = generateH2OStuff()
-h2ovwo3_df = generateH2OStuff(mode=2)
-n2_v_wo3_df = generateN2Stuff()
+# h_wo3_df = generateHStuff("1st")
+# h2_wo3_df = generateH2OStuff()
+# h2ovwo3_df = generateH2OStuff(mode=2)
+# n2_v_wo3_df = generateN2Stuff()
 
 # -------------------------------------------
 
-from reaction_coordinate_plotter import plot_reaction_coordinates
+from plotter import customPlot
 
-avg_energies1 = sum(h_wo3_df[ENERGY_LABEL]) / len(h_wo3_df[ENERGY_LABEL])
-avg_energies2 = sum(h2_wo3_df[ENERGY_LABEL]) / len(h2_wo3_df[ENERGY_LABEL])
-avg_energies3 = sum(h2ovwo3_df[ENERGY_LABEL]) / len(h2ovwo3_df[ENERGY_LABEL])
-avg_energies4 = sum(n2_v_wo3_df[ENERGY_LABEL]) / len(n2_v_wo3_df[ENERGY_LABEL])
+n2_energy = readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_N2")
+h2o_energy = readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_H2O")
+h2_energy = readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_H2")
+h_energy = readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_H")
+wo3_energy = readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_WO3")
+wo3_v_energy = (
+    readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_WO3_V_O0")
+    + readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_WO3_V_O1")
+    + readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_WO3_V_O2")
+) / 3.0
+h_wo3_energy = (
+    readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/H_1stLayer_OSZICAR/OSZICAR_O0")
+    + readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/H_1stLayer_OSZICAR/OSZICAR_O1")
+    + readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/H_1stLayer_OSZICAR/OSZICAR_O2")
+) / 3.0
+h2_wo3_energy = (
+    readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/H2O_OSZICAR/OSZICAR_V-O0-OD")
+    + readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/H2O_OSZICAR/OSZICAR_V-O1-OD")
+    + readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/H2O_OSZICAR/OSZICAR_V-O2-OD")
+) / 3.0
 
-print(avg_energies1)
-print(avg_energies2)
-print(avg_energies3)
-print(avg_energies4)
 
-
-plot_reaction_coordinates(
-    [0, 0.5, 1],
-    [avg_energies1, avg_energies2, avg_energies3],
-    [
-        f"(WO3)xH\n{str(avg_energies1)[:5]}",
-        f"(WO3)xH2\n{str(avg_energies2)[:5]}",
-        f"(WO3)xH2O\n{str(avg_energies3)[:5]}",
-    ],
-    ylabel="Adsorption Energy(eV)",
+x = [0, 0.33, 0.66, 1]
+yh = [
+    wo3_energy + 2 * h_energy,
+    h_wo3_energy + h_energy,
+    h2_wo3_energy,
+    wo3_v_energy + h2o_energy,
+]
+yh2 = [
+    wo3_energy + h2_energy,
+    h_wo3_energy + 0.5 * h2_energy,
+    h2_wo3_energy,
+    wo3_v_energy + h2o_energy,
+]
+labelsh = ["WO3 + 2H", "WO3--H + H", "WO3--H2", "WO3 (vac) + H2O"]
+labelsh2 = ["WO3 + H2", "WO3--H + (1/2)H2", labelsh[2], labelsh[3]]
+customPlot(
+    x,
+    [energy + abs(wo3_energy + h2_energy) for energy in yh2],
+    [energy + abs(wo3_energy + h2_energy) for energy in yh],
+    labelsh2,
+    labelsh,
 )
-
-
 
 # -------------------------------------------
 
