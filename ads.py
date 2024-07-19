@@ -1070,7 +1070,7 @@ def generateH2OStuff():
     print(df)
 
 
-def generateH2OStuff():
+def generateN2Stuff():
     post = "POSTOUTPUT/N2_OSZICAR"
     post_contcar = "POSTCONTCAR/N2_CONTCAR"
     key = "Orientation/Location Molecule Takes"
@@ -1087,7 +1087,7 @@ def generateH2OStuff():
     df = df.set_index(key)
     df = df.reset_index()
 
-    df, format_dict = addContcarImagesToDf(df, post_contcar, "N2", key, override=False)
+    df, format_dict = addContcarImagesToDf(df, post_contcar, "N2", key)
 
     refKey = addShortestThreeBondLengthsToDf(df, key, "N", "O", post_contcar, "CONTCAR")
     df.insert(2, refKey, df.pop(refKey))
