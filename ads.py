@@ -992,7 +992,7 @@ cleanUp()
 # generateSlabVac(large_slab, "O", 0)
 
 
-def generateHStuff(layer:str):
+def generateHStuff(layer: str):
     post = f"POSTOUTPUT/H_{layer}Layer_OSZICAR"
     post_contcar = f"POSTCONTCAR/H_{layer}Layer_CONTCAR"
     key = "Orientation/Location Molecule Takes"
@@ -1008,7 +1008,7 @@ def generateHStuff(layer:str):
     )
     df = df.sort_values(key)
     df = df.set_index(key)
-    df = df.drop("O0")  # didn't converge yet...
+    # df = df.drop("O0")  # didn't converge yet...
     # df = df.drop("O2")
     # df = df.drop("O3")
     # df = df.drop("O4")
@@ -1066,12 +1066,40 @@ def generateH2OStuff():
     refKey = addShortestThreeBondLengthsToDf(df, key, "O", "W", post_contcar, "CONTCAR")
     df.insert(2, refKey, df.pop(refKey))
 
-    df.to_html("data/adsorption_energy.html", escape=False, formatters=format_dict)
+    df.to_html("data/H2O_adsorption_energy.html", escape=False, formatters=format_dict)
     print(df)
 
 
-generateHStuff("2nd")
-generateH2OStuff()
+def generateH2OStuff():
+    post = "POSTOUTPUT/N2_OSZICAR"
+    post_contcar = "POSTCONTCAR/N2_CONTCAR"
+    key = "Orientation/Location Molecule Takes"
+    df = pd.DataFrame(
+        adsorptionEnergiesOfFolder(
+            post,
+            "OSZICAR_WO3_V_O0",
+            "OSZICAR_N2",
+            name_label=key,
+            energy_label="Adsorption Energy (eV)",
+        )
+    )
+    df = df.sort_values(key)
+    df = df.set_index(key)
+    df = df.reset_index()
+
+    df, format_dict = addContcarImagesToDf(df, post_contcar, "N2", key, override=False)
+
+    refKey = addShortestThreeBondLengthsToDf(df, key, "N", "O", post_contcar, "CONTCAR")
+    df.insert(2, refKey, df.pop(refKey))
+    refKey = addShortestThreeBondLengthsToDf(df, key, "N", "W", post_contcar, "CONTCAR")
+    df.insert(2, refKey, df.pop(refKey))
+
+    df.to_html("data/N2_adsorption_energy.html", escape=False, formatters=format_dict)
+    print(df)
+
+
+# generateHStuff("2nd")
+# generateH2OStuff()
 
 
 print("----done----")
