@@ -825,6 +825,7 @@ def addShortestThreeBondLengthsToDf(
 
 slab = read("CNST_CONTCAR_WO3_T")
 large_slab = read("CNST_CONTCAR_WO3_L", format="vasp")
+backup_slab = read("backupPSCR", format="vasp")
 emptyCell = read("CNST_CONTCAR_EMPTY")
 old_height_above_slab = 2.2
 height_above_slab = 1.5
@@ -1001,6 +1002,15 @@ cleanUp()
 # replacePOTCARfromHtoN("N2_x2y2_V")
 # generateSlabVac(large_slab, "O", 0)
 
+# ---------------------
+
+# slab_copy = slab.copy()
+# add_h(slab_copy, h.copy(), 0.964399922049548, "O", 0)
+# add_h(slab_copy, h.copy(), 0.964399922049548, "O", 0, dis_x=0.75)
+
+
+# ---------------------
+
 
 def generateHStuff(layer: str):
     post = f"POSTOUTPUT/H_{layer}Layer_OSZICAR"
@@ -1154,14 +1164,39 @@ yh2 = [
     h2_wo3_energy,
     wo3_v_energy + h2o_energy,
 ]
-labelsh = ["WO3 + 2H", "WO3--H + H", "WO3--H2", "WO3 (vac) + H2O"]
-labelsh2 = ["WO3 + H2", "WO3--H + (1/2)H2", labelsh[2], labelsh[3]]
+labelsh = [
+    {"label": "WO3 + 2H", "pos": "B"},
+    {"label": "WO3--H + H", "pos": "B"},
+    {"label": "WO3--H2", "pos": "T"},
+    {"label": "WO3 (vac) + H2O", "pos": "B"},
+]
+labelsh2 = [
+    {"label": "WO3 + H2", "pos": "B"},
+    {"label": "WO3--H + (1/2)H2", "pos": "B"},
+    labelsh[2],
+    labelsh[3],
+]
+
+figures = "data/figures"
+tmp = os.listdir(figures)
+tmp.sort()
+images = [figures + "/" + img for img in tmp if ".png" in img]
+images = [
+    {"img": images[0], "pos": "B", "ref": 1, "dis_x": -0.05},
+    {"img": images[1], "pos": "T", "ref": 1, "dis_x": 0.025},
+    {"img": images[2], "pos": "T", "ref": 0, "dis_x": 0.05},
+    {"img": images[3], "pos": "T", "ref": 0, "dis_x": 0.05},
+]
+images_locations = ["B", "B", "T", "B"]
 customPlot(
     x,
     [energy + abs(wo3_energy + h2_energy) for energy in yh2],
     [energy + abs(wo3_energy + h2_energy) for energy in yh],
     labelsh2,
     labelsh,
+    images,
+    image_width=0.2,
+    image_height=0.2,
 )
 
 # -------------------------------------------
