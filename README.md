@@ -18,6 +18,10 @@ More about VASP [here](https://www.vasp.at/)
 ## HTML output example
 ![image](https://github.com/EDED2314/VASP-scripts/blob/main/HTML%20Output%20Example%207.16.24.jpg)
 
+## Graph output example
+
+### Coming soon (feature already done... don't know if I can upload the actual graph though)
+
 ## Local Workspace Reference Tree
 ```
 .
