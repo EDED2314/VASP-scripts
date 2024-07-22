@@ -1002,14 +1002,18 @@ cleanUp()
 # replacePOTCARfromHtoN("N2_x2y2_V")
 # generateSlabVac(large_slab, "O", 0)
 
-# ---------------------
+# --------------------- playground --------------------------------
 
 # slab_copy = slab.copy()
-# add_h(slab_copy, h.copy(), 0.964399922049548, "O", 0)
+# addAdsorbateCustom(slab_copy, n.copy(), 0.96, "O", 2, vacancy=True)
+# write("e", slab_copy, format="vasp")
+
 # add_h(slab_copy, h.copy(), 0.964399922049548, "O", 0, dis_x=0.75)
 
+generateAdsorbentInVacuum(emptyCell, n.copy(), "N")
 
-# ---------------------
+
+# ---------------------------------------------------------------
 
 
 def generateHStuff(layer: str):
@@ -1127,7 +1131,7 @@ def generateN2Stuff():
 
 # -------------------------------------------
 
-from plotter import customPlot
+from plotter import customPlot, plot_rxn_coord_custom
 
 n2_energy = readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_N2")
 h2o_energy = readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_H2O")
@@ -1188,15 +1192,21 @@ images = [
     {"img": images[3], "pos": "T", "ref": 0, "dis_x": 0.05},
 ]
 images_locations = ["B", "B", "T", "B"]
-customPlot(
-    x,
+# customPlot(
+#     x,
+#     [energy + abs(wo3_energy + h2_energy) for energy in yh2],
+#     [energy + abs(wo3_energy + h2_energy) for energy in yh],
+#     labelsh2,
+#     labelsh,
+#     images,
+#     image_width=0.2,
+#     image_height=0.2,
+# )
+plot_rxn_coord_custom(
     [energy + abs(wo3_energy + h2_energy) for energy in yh2],
+    "H2 Adsorption Reaction Pathway",
     [energy + abs(wo3_energy + h2_energy) for energy in yh],
-    labelsh2,
-    labelsh,
-    images,
-    image_width=0.2,
-    image_height=0.2,
+    "2H Adsorption Reaction Pathway",
 )
 
 # -------------------------------------------
