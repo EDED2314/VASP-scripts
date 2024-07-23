@@ -368,6 +368,11 @@ def add_h2(slab, h2, height, symbol, index, dis_x=0, dis_y=0, pos=None):
     return fileName
 
 
+def add_h2o_to_existing_configurations_from_directory():
+
+    return
+
+
 # Function to add H2O in different orientations
 def add_h2o_vacancy(
     slab,
@@ -1010,8 +1015,13 @@ cleanUp()
 
 # add_h(slab_copy, h.copy(), 0.964399922049548, "O", 0, dis_x=0.75)
 
-generateAdsorbentInVacuum(emptyCell, n.copy(), "N")
+# generateAdsorbentInVacuum(emptyCell, n.copy(), "N")
 
+print(
+    adsorptionEnergy(
+        "N_OSZICAR_not_complete/OSZICAR_O0", "OSZICAR_WO3_V_O0", "OSZICAR_N"
+    )
+)
 
 # ---------------------------------------------------------------
 
@@ -1202,12 +1212,12 @@ images_locations = ["B", "B", "T", "B"]
 #     image_width=0.2,
 #     image_height=0.2,
 # )
-plot_rxn_coord_custom(
-    [energy + abs(wo3_energy + h2_energy) for energy in yh2],
-    "H2 Adsorption Reaction Pathway",
-    [energy + abs(wo3_energy + h2_energy) for energy in yh],
-    "2H Adsorption Reaction Pathway",
-)
+# plot_rxn_coord_custom(
+#     [energy + abs(wo3_energy + h2_energy) for energy in yh2],
+#     "H2 Adsorption Reaction Pathway",
+#     [energy + abs(wo3_energy + h2_energy) for energy in yh],
+#     "2H Adsorption Reaction Pathway",
+# )
 
 # -------------------------------------------
 
