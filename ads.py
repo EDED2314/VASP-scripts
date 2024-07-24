@@ -19,6 +19,9 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
+import matplotlib.pyplot as plt
+from pymatgen.io.vasp import Vasprun
+
 
 class bcolors:
     HEADER = "\033[95m"
@@ -523,6 +526,27 @@ def generateAdsorbentInVacuum(empty, molecule_or_atom, symbol: str):
 
 
 # POST SIM ANALYSIS
+def plotCompleteDOS(listOfVaspRunFilePaths, colorsList, sigma=0.1):
+    assert len(listOfVaspRunFilePaths) == len(colorsList)
+
+    for i in range(len(listOfVaspRunFilePaths)):
+        path = listOfVaspRunFilePaths[i]
+        color = colorsList[i]
+        vr = Vasprun(path)
+
+        dos = vr.complete_dos
+        dos.densities = dos.get_smeared_densities(sigma)
+
+        x = dos.energies - dos.efermi
+        y = dos.get_densities()
+
+        plt.plot(x, y, color=color)
+
+    plt.xlabel("E - Ef (eV)")
+    plt.ylabel("DOS (a.u.)")
+    plt.show()
+
+
 def readOszicarFileAndGetLastLineEnergy(fileName: str):
     lines = []
     with open(fileName) as f:
@@ -1017,11 +1041,13 @@ cleanUp()
 
 # generateAdsorbentInVacuum(emptyCell, n.copy(), "N")
 
-print(
-    adsorptionEnergy(
-        "N_OSZICAR_not_complete/OSZICAR_O0", "OSZICAR_WO3_V_O0", "OSZICAR_N"
-    )
-)
+# print(
+#     adsorptionEnergy(
+#         "N_OSZICAR_not_complete/OSZICAR_O0", "OSZICAR_WO3_V_O0", "OSZICAR_N"
+#     )
+# )
+
+plotCompleteDOS(["ads_vasprun.xml/H/1stLayer/O1/vasprun.xml"], ["blue"])
 
 # ---------------------------------------------------------------
 
@@ -1178,18 +1204,31 @@ yh2 = [
     h2_wo3_energy,
     wo3_v_energy + h2o_energy,
 ]
+# labelsh = [
+#     {"label": "WO3 + 2H", "pos": "B"},
+#     {"label": "WO3--H + H", "pos": "B"},
+#     {"label": "WO3--H2", "pos": "T"},
+#     {"label": "WO3 (vac) + H2O", "pos": "B"},
+# ]
+# labelsh2 = [
+#     {"label": "WO3 + H2", "pos": "B"},
+#     {"label": "WO3--H + (1/2)H2", "pos": "B"},
+#     labelsh[2],
+#     labelsh[3],
+# ]
 labelsh = [
-    {"label": "WO3 + 2H", "pos": "B"},
-    {"label": "WO3--H + H", "pos": "B"},
-    {"label": "WO3--H2", "pos": "T"},
-    {"label": "WO3 (vac) + H2O", "pos": "B"},
+    {"label": "* + 2H", "pos": "B"},
+    {"label": "*H + H", "pos": "B"},
+    {"label": "*H2", "pos": "T"},
+    {"label": "(vac) + H2O", "pos": "B"},
 ]
 labelsh2 = [
-    {"label": "WO3 + H2", "pos": "B"},
-    {"label": "WO3--H + (1/2)H2", "pos": "B"},
+    {"label": "* + H2", "pos": "B"},
+    {"label": "*H + (1/2)H2", "pos": "B"},
     labelsh[2],
     labelsh[3],
 ]
+
 
 figures = "data/figures"
 tmp = os.listdir(figures)
@@ -1197,7 +1236,7 @@ tmp.sort()
 images = [figures + "/" + img for img in tmp if ".png" in img]
 images = [
     {"img": images[0], "pos": "B", "ref": 1, "dis_x": -0.05},
-    {"img": images[1], "pos": "T", "ref": 1, "dis_x": 0.025},
+    {"img": images[1], "pos": "T", "ref": 1, "dis_x": 0.040},
     {"img": images[2], "pos": "T", "ref": 0, "dis_x": 0.05},
     {"img": images[3], "pos": "T", "ref": 0, "dis_x": 0.05},
 ]
@@ -1220,6 +1259,5 @@ images_locations = ["B", "B", "T", "B"]
 # )
 
 # -------------------------------------------
-
 
 print("----done----")
