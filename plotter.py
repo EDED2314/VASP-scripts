@@ -153,6 +153,7 @@ def customPlot(
     ylabel: str = "Potential Energy (eV)",
     image_width=0.15,
     image_height=0.15,
+    ignore_labels_index=[],
 ):
     """
     x and y positions. y in any units you want, if you want, and x in the range [0,1].
@@ -211,6 +212,9 @@ def customPlot(
 
     # add labels
     for k in range(len(labels_matrix)):
+        if ignore_labels_index:
+            if k in ignore_labels_index:
+                continue
         label = labels_matrix[k]
         y = y_matrix[k]
         for i in range(len(X)):
@@ -477,6 +481,7 @@ def main():
     # print(h2_wo3_energy)
 
     x = [0, 0.33, 0.66, 1]
+
     yh = [
         wo3_energy + 2 * h_energy,
         h_wo3_energy + h_energy,
@@ -527,11 +532,13 @@ def main():
     customPlot(
         x,
         [
+            [energy + abs(wo3_energy + h2_energy) for energy in yh2],
+            [energy + abs(wo3_energy + h2_energy) for energy in yh],
             [energy + abs(wo3_energy + h2_energy) for energy in yh2300],
             [energy + abs(wo3_energy + h2_energy) for energy in yh300],
         ],
-        [labelsh2, labelsh],
-        ["black", "blue"],
+        [labelsh2, labelsh, labelsh2, labelsh],
+        ["red", "green", "black", "blue"],
         images,
         image_width=0.2,
         image_height=0.2,
