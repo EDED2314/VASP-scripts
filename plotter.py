@@ -477,18 +477,6 @@ def main():
     # print(h2_wo3_energy)
 
     x = [0, 0.33, 0.66, 1]
-    yh300 = [
-        (wo3_energy + 0.087501) + 2 * h_energy,
-        (h_wo3_energy + 0.338062) + h_energy,
-        (h2_wo3_energy + 0.671916),
-        (wo3_v_energy + 0.063847) + (h2o_energy + 0.589729),
-    ]
-    yh2300 = [
-        (wo3_energy + 0.087501) + (h2_energy + 0.220019),
-        (h_wo3_energy + 0.338062) + 0.5 * (h2_energy + 0.220019),
-        (h2_wo3_energy + 0.671916),
-        (wo3_v_energy + 0.063847) + (h2o_energy + 0.589729),
-    ]
     yh = [
         wo3_energy + 2 * h_energy,
         h_wo3_energy + h_energy,
