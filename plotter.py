@@ -145,10 +145,9 @@ def open_image_local(path_to_image):
 
 def customPlot(
     X,
-    Y1,
-    Y2,
-    labels1,
-    labels2,
+    y_matrix,
+    labels_matrix,
+    colors,
     images,
     xlabel: str = "Reaction Coordinate",
     ylabel: str = "Potential Energy (eV)",
@@ -180,18 +179,22 @@ def customPlot(
     plt.rc("figure", titlesize=14)
 
     # sanity checks
-    assert len(X) == len(Y1), "need X and Y to match length"
-    assert len(X) == len(Y2)
-    assert len(X) == len(labels1), "need right number of labels"
-    assert len(X) == len(labels2)
+    for y in y_matrix:
+        assert len(X) == len(y)
+    for label in labels_matrix:
+        assert len(X) == len(label)
+    assert len(images) == len(X)
+    assert len(colors) == len(y_matrix)
 
     # create figure and axis
     fig, ax = plt.subplots(figsize=(8, 8))
     xgrid = np.linspace(0, 1, 1000)
     ax.spines[["right", "bottom", "top"]].set_visible(False)
 
-    YMAX = max(1.1 * max(Y1) - 0.1 * min(Y1), 1.1 * max(Y2) - 0.1 * min(Y2))
-    YMIN = min(1.1 * min(Y1) - 0.1 * max(Y1), 1.1 * min(Y2) - 0.1 * max(Y2)) - 0.6
+    flattened_y = [item for sublist in y_matrix for item in sublist]
+
+    YMAX = 1.1 * max(flattened_y) - 0.1 * min(flattened_y)
+    YMIN = 1.1 * min(flattened_y) - 0.1 * max(flattened_y) - 0.6
 
     ax.set_xlim(-0.1, 1.1)
     ax.tick_params(axis="x", which="both", bottom=False, top=False, labelbottom=False)
@@ -203,40 +206,26 @@ def customPlot(
     ax.set_ylabel(ylabel)
 
     # plot the points
-    ax.plot(X, Y1, "o", markersize=7, c="black")
-    ax.plot(X, Y2, "o", markersize=7, c="blue")
+    for i in range(len(y_matrix)):
+        ax.plot(X, y_matrix[i], "o", markersize=7, c=colors[i])
 
     # add labels
-    for i in range(len(X)):
-        if labels1[i]:
-            # delta_y = 0.6 if TS1[i] else -1.2
-            delta_y = 0.6 if labels1[i]["pos"] == "T" else -1.2
-            ax.annotate(
-                labels1[i]["label"],
-                (X[i], Y1[i] + delta_y),
-                fontsize=12,
-                fontweight="normal",
-                ha="center",
-            )
-        if labels2[i]:
-            # delta_y = 0.6 if TS2[i] else -1.2
-            delta_y = 0.6 if labels1[i]["pos"] == "T" else -1.2
-            ax.annotate(
-                labels2[i]["label"],
-                (X[i], Y2[i] + delta_y),
-                fontsize=12,
-                fontweight="normal",
-                ha="center",
-            )
+    for label in labels_matrix:
+        for i in range(len(X)):
+            if label[i]:
+                delta_y = 0.6 if label[i]["pos"] == "T" else -1.2
+                ax.annotate(
+                    label[i]["label"],
+                    (X[i], y_matrix[i] + delta_y),
+                    fontsize=12,
+                    fontweight="normal",
+                    ha="center",
+                )
 
     # put images on graph
     for i in range(len(X)):
         delta_y = 2 if images[i]["pos"] == "T" else -2
-        if images[i]["ref"] == 0:
-            pos = (X[i] + images[i]["dis_x"], Y1[i] + delta_y)
-        else:
-            pos = (X[i] + images[i]["dis_x"], Y2[i] + delta_y)
-
+        pos = (X[i] + images[i]["dis_x"], y_matrix[images[i]["ref"]][i] + delta_y)
         image = open_image_local(images[i]["img"])
 
         display_coords = ax.transData.transform(pos)
@@ -251,21 +240,17 @@ def customPlot(
                 image_height,
             ]
         )
-        # ax_image = fig.add_axes([image_xaxis, image_yaxis, image_width, image_height])
         ax_image.imshow(image)
         ax_image.axis("off")
 
     # add connecting lines
-    for i in range(len(X) - 1):
-        idxs = np.where(np.logical_and(xgrid >= X[i], xgrid <= X[i + 1]))
-        smoother1 = interp.BPoly.from_derivatives(
-            [X[i], X[i + 1]], [[y, 0] for y in [Y1[i], Y1[i + 1]]]
-        )
-        ax.plot(xgrid[idxs], smoother1(xgrid[idxs]), ls="-", c="black", lw=2)
-        smoother2 = interp.BPoly.from_derivatives(
-            [X[i], X[i + 1]], [[y, 0] for y in [Y2[i], Y2[i + 1]]]
-        )
-        ax.plot(xgrid[idxs], smoother2(xgrid[idxs]), ls="-", c="blue", lw=2)
+    for k in range(len(y_matrix)):
+        for i in range(len(X) - 1):
+            idxs = np.where(np.logical_and(xgrid >= X[i], xgrid <= X[i + 1]))
+            smoother = interp.BPoly.from_derivatives(
+                [X[i], X[i + 1]], [[y, 0] for y in [y_matrix[k][i], y_matrix[k][i + 1]]]
+            )
+            ax.plot(xgrid[idxs], smoother(xgrid[idxs]), ls="-", c=colors[k], lw=2)
 
     # finish up!
     fig.tight_layout()
@@ -490,18 +475,7 @@ def main():
     # print(h2_wo3_energy)
 
     x = [0, 0.33, 0.66, 1]
-    # yh300 = [
-    #     (wo3_energy ) + 2 * h_energy,
-    #     (h_wo3_energy) + h_energy,
-    #     (h2_wo3_energy ),
-    #     (wo3_v_energy ) + (h2o_energy + 0),
-    # ]
-    # yh2300 = [
-    #     (wo3_energy + 0.) + (h2_energy + 0.),
-    #     (h_wo3_energy + 0.) + 0.5 * (h2_energy + 0.),
-    #     (h2_wo3_energy + 0.),
-    #     (wo3_v_energy + 0.) + (h2o_energy + 0),
-    # ]
+
     yh = [
         wo3_energy + 2 * h_energy,
         h_wo3_energy + h_energy,
@@ -549,17 +523,18 @@ def main():
         {"img": images[2], "pos": "T", "ref": 0, "dis_x": 0.05},
         {"img": images[3], "pos": "T", "ref": 0, "dis_x": 0.05},
     ]
-    images_locations = ["B", "B", "T", "B"]
-    # customPlot(
-    #     x,
-    #     [energy + abs(wo3_energy + h2_energy) for energy in yh2],
-    #     [energy + abs(wo3_energy + h2_energy) for energy in yh],
-    #     labelsh2,
-    #     labelsh,
-    #     images,
-    #     image_width=0.2,
-    #     image_height=0.2,
-    # )
+    customPlot(
+        x,
+        [
+            [energy + abs(wo3_energy + h2_energy) for energy in yh2300],
+            [energy + abs(wo3_energy + h2_energy) for energy in yh300],
+        ],
+        [labelsh2, labelsh],
+        ["black", "blue"],
+        images,
+        image_width=0.2,
+        image_height=0.2,
+    )
     # plot_rxn_coord_custom(
     #     [energy + abs(wo3_energy + h2_energy) for energy in yh2],
     #     "H2 Adsorption Reaction Pathway",
