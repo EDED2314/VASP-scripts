@@ -396,7 +396,7 @@ def plot_rxn_coord_custom(energies1, name, energies2, name2, index="1"):
         scale=0.32,
     )
 
-    ax3.set_ylabel("E (eV)", fontsize=16)
+    ax3.set_ylabel("PE (eV)", fontsize=16)
     ax3.set_xlabel("Reaction Coordinate", fontsize=16)
     x, labels = standardLabels
     ax3.set_xticks(x, labels)
@@ -428,16 +428,160 @@ def plot_rxn_coord_custom(energies1, name, energies2, name2, index="1"):
     ax4.tick_params(labelsize=12)
     ax4.locator_params(axis="y", nbins=6)
     ax4.set_xticks(deltaLabels[0], deltaLabels[1])
-    ax4.set_ylabel("$\Delta$ E (eV)", fontsize=12)
+    ax4.set_ylabel("$\Delta$ PE (eV)", fontsize=12)
     ax4.set_xlabel("Step", fontsize=12)
-    
+
     ax5.tick_params(labelsize=12)
     ax5.locator_params(axis="y", nbins=6)
     ax5.set_xticks(deltaLabels[0], deltaLabels[1])
-    ax5.set_ylabel("$\Delta$ E (eV)", fontsize=12)
+    ax5.set_ylabel("$\Delta$ PE (eV)", fontsize=12)
     ax5.set_xlabel("Step", fontsize=12)
 
     plt.tight_layout()
 
     fig3.savefig(f"data/es_delta_es_inset_{index}.png", dpi=300)
     plt.close(fig3)
+
+
+def main():
+    from ads import readOszicarFileAndGetLastLineEnergy, OUTPUT_DIR
+    import os
+
+    n2_energy = readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_N2")
+    h2o_energy = readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_H2O")
+    h2_energy = readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_H2")
+    h_energy = readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_H")
+    wo3_energy = readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_WO3")
+    wo3_v_energy = (
+        readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_WO3_V_O0")
+        + readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_WO3_V_O1")
+        + readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_WO3_V_O2")
+    ) / 3.0
+    h_wo3_energy = (
+        readOszicarFileAndGetLastLineEnergy(
+            f"{OUTPUT_DIR}/H_1stLayer_OSZICAR/OSZICAR_O0"
+        )
+        + readOszicarFileAndGetLastLineEnergy(
+            f"{OUTPUT_DIR}/H_1stLayer_OSZICAR/OSZICAR_O1"
+        )
+        + readOszicarFileAndGetLastLineEnergy(
+            f"{OUTPUT_DIR}/H_1stLayer_OSZICAR/OSZICAR_O2"
+        )
+    ) / 3.0
+    h2_wo3_energy = (
+        readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/H2O_OSZICAR/OSZICAR_V-O0-OD")
+        + readOszicarFileAndGetLastLineEnergy(
+            f"{OUTPUT_DIR}/H2O_OSZICAR/OSZICAR_V-O1-OD"
+        )
+        + readOszicarFileAndGetLastLineEnergy(
+            f"{OUTPUT_DIR}/H2O_OSZICAR/OSZICAR_V-O2-OD"
+        )
+    ) / 3.0
+    h2o_2_amount_energy = readOszicarFileAndGetLastLineEnergy(
+        f"{OUTPUT_DIR}/H2O_amt_OSZICAR/OSZICAR_2H2O_NC"
+    )
+    h2o_3_amount_energy = readOszicarFileAndGetLastLineEnergy(
+        f"{OUTPUT_DIR}/H2O_amt_OSZICAR/OSZICAR_3H2O_NC"
+    )
+
+    # print(h_energy)
+    # print(wo3_energy)
+    # print(wo3_v_energy)
+    # print(h2_wo3_energy)
+
+    x = [0, 0.33, 0.66, 1]
+    # yh300 = [
+    #     (wo3_energy ) + 2 * h_energy,
+    #     (h_wo3_energy) + h_energy,
+    #     (h2_wo3_energy ),
+    #     (wo3_v_energy ) + (h2o_energy + 0),
+    # ]
+    # yh2300 = [
+    #     (wo3_energy + 0.) + (h2_energy + 0.),
+    #     (h_wo3_energy + 0.) + 0.5 * (h2_energy + 0.),
+    #     (h2_wo3_energy + 0.),
+    #     (wo3_v_energy + 0.) + (h2o_energy + 0),
+    # ]
+    yh = [
+        wo3_energy + 2 * h_energy,
+        h_wo3_energy + h_energy,
+        h2_wo3_energy,
+        wo3_v_energy + h2o_energy,
+    ]
+    yh2 = [
+        wo3_energy + h2_energy,
+        h_wo3_energy + 0.5 * h2_energy,
+        h2_wo3_energy,
+        wo3_v_energy + h2o_energy,
+    ]
+    # labelsh = [
+    #     {"label": "WO3 + 2H", "pos": "B"},
+    #     {"label": "WO3--H + H", "pos": "B"},
+    #     {"label": "WO3--H2", "pos": "T"},
+    #     {"label": "WO3 (vac) + H2O", "pos": "B"},
+    # ]
+    # labelsh2 = [
+    #     {"label": "WO3 + H2", "pos": "B"},
+    #     {"label": "WO3--H + (1/2)H2", "pos": "B"},
+    #     labelsh[2],
+    #     labelsh[3],
+    # ]
+    labelsh = [
+        {"label": "* + 2H", "pos": "B"},
+        {"label": "*H + H", "pos": "B"},
+        {"label": "*H2", "pos": "T"},
+        {"label": "(vac) + H2O", "pos": "B"},
+    ]
+    labelsh2 = [
+        {"label": "* + H2", "pos": "B"},
+        {"label": "*H + (1/2)H2", "pos": "B"},
+        labelsh[2],
+        labelsh[3],
+    ]
+
+    figures = "data/figures"
+    tmp = os.listdir(figures)
+    tmp.sort()
+    images = [figures + "/" + img for img in tmp if ".png" in img]
+    images = [
+        {"img": images[0], "pos": "B", "ref": 1, "dis_x": -0.05},
+        {"img": images[1], "pos": "T", "ref": 1, "dis_x": 0.040},
+        {"img": images[2], "pos": "T", "ref": 0, "dis_x": 0.05},
+        {"img": images[3], "pos": "T", "ref": 0, "dis_x": 0.05},
+    ]
+    images_locations = ["B", "B", "T", "B"]
+    # customPlot(
+    #     x,
+    #     [energy + abs(wo3_energy + h2_energy) for energy in yh2],
+    #     [energy + abs(wo3_energy + h2_energy) for energy in yh],
+    #     labelsh2,
+    #     labelsh,
+    #     images,
+    #     image_width=0.2,
+    #     image_height=0.2,
+    # )
+    # plot_rxn_coord_custom(
+    #     [energy + abs(wo3_energy + h2_energy) for energy in yh2],
+    #     "H2 Adsorption Reaction Pathway",
+    #     [energy + abs(wo3_energy + h2_energy) for energy in yh],
+    #     "2H Adsorption Reaction Pathway",
+    # )
+    x = [0, 0.25, 0.5, 0.75, 1]
+    y = [
+        wo3_energy + h2_energy,
+        wo3_energy + h_energy + h_energy,
+        h_wo3_energy + h_energy,
+        h2_wo3_energy,
+        wo3_v_energy + h2o_energy,
+    ]
+    labels = [
+        "WO3 + H2",
+        "WO3 + 2H",
+        "H-WO3 + H",
+        "H2-WO3",
+        "WO3 + H2O",
+    ]
+    # plot_potential_surface(x, y, labels)
+
+
+main()
