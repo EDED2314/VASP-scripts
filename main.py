@@ -227,7 +227,9 @@ def getSurfaceAtoms(symbol: str, index: int, slab, layer: int = -1):
 
     atom_list = []
     z_pos = [atom.position[2] for atom in available_atoms]
-    z_pos = list(set(z_pos))
+    # Round the numbers to the desired precision and then use a set to remove duplicates
+    rounded_list = [round(num, 3) for num in z_pos]
+    z_pos = list(set(rounded_list))
     z_pos.sort()
     z_wanted = z_pos[layer]
     for atom in available_atoms:
@@ -853,7 +855,7 @@ def addShortestThreeBondLengthsToDf(
 
 
 slab = read("CNST_CONTCAR_WO3_T")
-# middle_slab = read("CNT_CONTCAR_WO3_M", format="vasp")
+middle_slab = read("CNST_CONTCAR_WO3_M", format="vasp")
 large_slab = read("CNST_CONTCAR_WO3_L", format="vasp")
 backup_slab = read("backupPSCR", format="vasp")
 emptyCell = read("CNST_CONTCAR_EMPTY")
@@ -869,244 +871,33 @@ triangle_2 = [2, 3, 5]
 cleanUp()
 
 
-# --------------------- playground --------------------------------
-
-# slab_copy = backup_slab.copy()
-# from ase.io.vasp import write_vasp
-
-# write_vasp("hello", slab_copy, direct=True)
-
-
-# generateSlabVac(slab, "O", 0)
-# genKpoints("backupPSCR")
-# add_h(slab, h.copy(), 1, "O", 1)
-
-add_h(slab, h2.copy(), height_above_slab, "O", 0)
-# ---------------------------------------------------------------
-
-
-def generateHStuff(layer: str):
-    post = f"POSTOUTPUT/H_{layer}Layer_OSZICAR"
-    post_contcar = f"POSTCONTCAR/H_{layer}Layer_CONTCAR"
-    key = NAME_LABEL
-    df = pd.DataFrame(
-        adsorptionEnergiesOfFolder(
-            post,
-            "OSZICAR_WO3",
-            "OSZICAR_H2",
-            multi=0.5,
-            name_label=key,
-            energy_label=ENERGY_LABEL,
-        )
-    )
-    df = df.sort_values(key)
-    df = df.set_index(key)
-    # df = df.drop("O0")  # didn't converge yet...
-    df = df.drop("P0.0")
-    df = df.reset_index()
-
-    df, format_dict = addContcarImagesToDf(df, post_contcar, f"H/{layer}Layer", key)
-
-    refKey = addShortestThreeBondLengthsToDf(df, key, "H", "O", post_contcar, "CONTCAR")
-    df.insert(2, refKey, df.pop(refKey))
-    refKey = addShortestThreeBondLengthsToDf(df, key, "H", "W", post_contcar, "CONTCAR")
-    df.insert(2, refKey, df.pop(refKey))
-
-    df.to_html(
-        "data/H_atom_adsorption_energy.html", escape=False, formatters=format_dict
-    )
-    print(df)
-    return df
-
-
-def generateH2OStuff(mode: int = 1):
-    post = "POSTOUTPUT/H2O_OSZICAR"
-    post_contcar = "POSTCONTCAR/H2O_CONTCAR"
-    key = NAME_LABEL
-    if mode == 1:
-        df = pd.DataFrame(
-            adsorptionEnergiesOfFolder(
-                post,
-                "OSZICAR_WO3",
-                "OSZICAR_H2",
-                name_label=key,
-                energy_label=ENERGY_LABEL,
-            )
-        )
-    else:
-        df = pd.DataFrame(
-            adsorptionEnergiesOfFolder(
-                post,
-                "OSZICAR_WO3_V_O0",
-                "OSZICAR_H2O",
-                name_label=key,
-                energy_label=ENERGY_LABEL,
-            )
-        )
-    df = df.sort_values(key)
-    df = df.set_index(key)
-    # df = df.drop("V-O2-OD")  # didn't converge :(
-    df = df.reset_index()
-
-    df, format_dict = addContcarImagesToDf(df, post_contcar, "H2O", key, override=False)
-
-    refKey = addShortestThreeBondLengthsToDf(df, key, "H", "O", post_contcar, "CONTCAR")
-    df.insert(2, refKey, df.pop(refKey))
-    refKey = addShortestThreeBondLengthsToDf(df, key, "H", "W", post_contcar, "CONTCAR")
-    df.insert(2, refKey, df.pop(refKey))
-    refKey = addShortestThreeBondLengthsToDf(df, key, "O", "W", post_contcar, "CONTCAR")
-    df.insert(2, refKey, df.pop(refKey))
-
-    df.to_html(
-        f"data/H2O_adsorption_energy_{mode}.html", escape=False, formatters=format_dict
-    )
-    print(df)
-    return df
-
-
-def generateN2Stuff():
-    post = "POSTOUTPUT/N2_OSZICAR"
-    post_contcar = "POSTCONTCAR/N2_CONTCAR"
-    key = NAME_LABEL
-    df = pd.DataFrame(
-        adsorptionEnergiesOfFolder(
-            post,
-            "OSZICAR_WO3_V_O0",
-            "OSZICAR_N2",
-            name_label=key,
-            energy_label=ENERGY_LABEL,
-        )
-    )
-    df = df.sort_values(key)
-    df = df.set_index(key)
-    df = df.reset_index()
-
-    df, format_dict = addContcarImagesToDf(df, post_contcar, "N2", key)
-
-    refKey = addShortestThreeBondLengthsToDf(df, key, "N", "O", post_contcar, "CONTCAR")
-    df.insert(2, refKey, df.pop(refKey))
-    refKey = addShortestThreeBondLengthsToDf(df, key, "N", "W", post_contcar, "CONTCAR")
-    df.insert(2, refKey, df.pop(refKey))
-
-    df.to_html("data/N2_adsorption_energy.html", escape=False, formatters=format_dict)
-    print(df)
-    return df
-
-
-# h_wo3_df = generateHStuff("1st")
-# h2_wo3_df = generateH2OStuff()
-# h2ovwo3_df = generateH2OStuff(mode=2)
-# n2_v_wo3_df = generateN2Stuff()
-
-# -------------------------------------------
-
-from plotter import customPlot, plot_rxn_coord_custom, plot_potential_surface
-
-n2_energy = readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_N2")
-h2o_energy = readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_H2O")
-h2_energy = readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_H2")
-h_energy = readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_H")
-wo3_energy = readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_WO3")
-wo3_v_energy = (
-    readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_WO3_V_O0")
-    + readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_WO3_V_O1")
-    + readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/OSZICAR_WO3_V_O2")
-) / 3.0
-h_wo3_energy = (
-    readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/H_1stLayer_OSZICAR/OSZICAR_O0")
-    + readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/H_1stLayer_OSZICAR/OSZICAR_O1")
-    + readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/H_1stLayer_OSZICAR/OSZICAR_O2")
-) / 3.0
-h2_wo3_energy = (
-    readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/H2O_OSZICAR/OSZICAR_V-O0-OD")
-    + readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/H2O_OSZICAR/OSZICAR_V-O1-OD")
-    + readOszicarFileAndGetLastLineEnergy(f"{OUTPUT_DIR}/H2O_OSZICAR/OSZICAR_V-O2-OD")
-) / 3.0
-
-
-x = [0, 0.33, 0.66, 1]
-yh = [
-    wo3_energy + 2 * h_energy,
-    h_wo3_energy + h_energy,
-    h2_wo3_energy,
-    wo3_v_energy + h2o_energy,
-]
-yh2 = [
-    wo3_energy + h2_energy,
-    h_wo3_energy + 0.5 * h2_energy,
-    h2_wo3_energy,
-    wo3_v_energy + h2o_energy,
-]
-# labelsh = [
-#     {"label": "WO3 + 2H", "pos": "B"},
-#     {"label": "WO3--H + H", "pos": "B"},
-#     {"label": "WO3--H2", "pos": "T"},
-#     {"label": "WO3 (vac) + H2O", "pos": "B"},
-# ]
-# labelsh2 = [
-#     {"label": "WO3 + H2", "pos": "B"},
-#     {"label": "WO3--H + (1/2)H2", "pos": "B"},
-#     labelsh[2],
-#     labelsh[3],
-# ]
-labelsh = [
-    {"label": "* + 2H", "pos": "B"},
-    {"label": "*H + H", "pos": "B"},
-    {"label": "*H2", "pos": "T"},
-    {"label": "(vac) + H2O", "pos": "B"},
-]
-labelsh2 = [
-    {"label": "* + H2", "pos": "B"},
-    {"label": "*H + (1/2)H2", "pos": "B"},
-    labelsh[2],
-    labelsh[3],
-]
-
-
-figures = "data/figures"
-tmp = os.listdir(figures)
-tmp.sort()
-images = [figures + "/" + img for img in tmp if ".png" in img]
-images = [
-    {"img": images[0], "pos": "B", "ref": 1, "dis_x": -0.05},
-    {"img": images[1], "pos": "T", "ref": 1, "dis_x": 0.040},
-    {"img": images[2], "pos": "T", "ref": 0, "dis_x": 0.05},
-    {"img": images[3], "pos": "T", "ref": 0, "dis_x": 0.05},
-]
-images_locations = ["B", "B", "T", "B"]
-# customPlot(
-#     x,
-#     [energy + abs(wo3_energy + h2_energy) for energy in yh2],
-#     [energy + abs(wo3_energy + h2_energy) for energy in yh],
-#     labelsh2,
-#     labelsh,
-#     images,
-#     image_width=0.2,
-#     image_height=0.2,
+# generateSimulationFolders(
+#     add_h(
+#         middle_slab.copy(),
+#         h.copy(),
+#         height_above_slab,
+#         "O",
+#         4,
+#         layer=-2,
+#         idxs=triangle_1,
+#     ),
+#     "H_x1y2",
+#     templateFolderName="templates_W001_x1y2",
+#     trailString="M",
 # )
-# plot_rxn_coord_custom(
-#     [energy + abs(wo3_energy + h2_energy) for energy in yh2],
-#     "H2 Adsorption Reaction Pathway",
-#     [energy + abs(wo3_energy + h2_energy) for energy in yh],
-#     "2H Adsorption Reaction Pathway",
-# )
-x = [0, 0.25, 0.5, 0.75, 1]
-y = [
-    wo3_energy + h2_energy,
-    wo3_energy + h_energy + h_energy,
-    h_wo3_energy + h_energy,
-    h2_wo3_energy,
-    wo3_v_energy + h2o_energy,
-]
-labels = [
-    "WO3 + H2",
-    "WO3 + 2H",
-    "H-WO3 + H",
-    "H2-WO3",
-    "WO3 + H2O",
-]
-# plot_potential_surface(x, y, labels)
+# for i in range(3):
+#     generateSimulationFolders(
+#         add_h(
+#             middle_slab.copy(),
+#             h.copy(),
+#             height_above_slab,
+#             "O",
+#             i,
+#         ),
+#         "H_x1y2",
+#         templateFolderName="templates_W001_x1y2",
+#         trailString="M",
+#     )
 
-# -------------------------------------------
 
 print("----done----")
