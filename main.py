@@ -22,22 +22,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pymatgen.io.vasp import Vasprun
 
-
-class bcolors:
-    HEADER = "\033[95m"
-    OKBLUE = "\033[94m"
-    OKCYAN = "\033[96m"
-    OKGREEN = "\033[92m"
-    WARNING = "\033[93m"
-    FAIL = "\033[91m"
-    ENDC = "\033[0m"
-    BOLD = "\033[1m"
-    UNDERLINE = "\033[4m"
-
-
-OUTPUT_DIR = "POSTOUTPUT"
-NAME_LABEL = "Orientation/Location Molecule Takes"
-ENERGY_LABEL = "Adsorption Energy (eV)"
+from energies import *
+from constants import *
 
 
 # Create the H2O molecule
@@ -549,18 +535,6 @@ def plotCompleteDOS(listOfVaspRunFilePaths, colorsList, sigma=0.1):
     plt.show()
 
 
-def readOszicarFileAndGetLastLineEnergy(fileName: str):
-    lines = []
-    with open(fileName) as f:
-        lines = f.readlines()
-
-    lastLine = lines[-1]
-    tmp = lastLine.split()
-    energy = float(tmp[2])
-
-    return energy
-
-
 def adsorptionEnergy(
     OSZICAR_BOTH,
     OSZICAR_SURF,
@@ -863,41 +837,68 @@ emptyCell = read("CNST_CONTCAR_EMPTY")
 old_height_above_slab = 2.2
 height_above_slab = 1.5
 height_above_slab_for_vacancies = 0.5
-height_above_slab_for_H2_bridge = -0.35
+height_above_slab_for_vacancies_2 = 1
+height_above_slab_for_H2_second_layer = -0.35
 
 triangle_1 = [0, 1, 4]
 triangle_2 = [2, 3, 5]
 
 cleanUp()
 
+from energies import h2_wo3_energy, wo3_v_energy, h2o_energy
 
-# generateSimulationFolders(
-#     add_h(
-#         middle_slab.copy(),
-#         h.copy(),
-#         height_above_slab,
-#         "O",
-#         4,
-#         layer=-2,
-#         idxs=triangle_1,
-#     ),
-#     "H_x1y2",
-#     templateFolderName="templates_W001_x1y2",
-#     trailString="M",
+# generateSlabVac(middle_slab.copy(), "O", 0)
+# add_h2o_vacancy(
+#     backup_slab.copy(), h2o.copy(), height_above_slab_for_vacancies, "O", 0, "O_down"
 # )
-# for i in range(3):
-#     generateSimulationFolders(
-#         add_h(
-#             middle_slab.copy(),
-#             h.copy(),
-#             height_above_slab,
-#             "O",
-#             i,
-#         ),
-#         "H_x1y2",
-#         templateFolderName="templates_W001_x1y2",
-#         trailString="M",
-#     )
+# add_h2o_vacancy(
+#     backup_slab.copy(), h2o.copy(), height_above_slab_for_vacancies, "O", 1, "O_down"
+# )
+
+# print(h2o_3_amount_energy - (h2o_energy + h2o_3_1vac_O0_energy))
+# print(h2o_2_amount_energy - (h2o_energy + h2o_2_1vac_O0_energy))
+# print(h2_wo3_energy - (h2o_energy + wo3_v_energy))
+# print(h2_avg_o014_wo3_energy - (wo3_energy + h2_energy))
+# # print(h2_bridge_wo3_energy - (wo3_energy + h2_energy))
+
+# add_n2_vacancy(middle_slab.copy(), n2.copy(), height_above_slab_for_vacancies, "O", 0)
+
+# print(medium_n2_vac_energy - (n2_energy + medium_wo3_v_energy))
+# print(large_n2_vac_energy - (n2_energy + large_wo3_v_energy))
+# print(large_n2_vac_energy)
+# print(large_wo3_v_energy)
+
+# print(medium_n2_vac_energy)
+# print(medium_wo3_v_energy)
+
+# print(n2_energy)
+
+# import matplotlib.pyplot as plt
+# from pymatgen.io.vasp import Vasprun
+
+# sigma = 0.1  # smooth out the DOS
+# vr = Vasprun("../001_WO3/vasprun.xml")
+
+# dos = vr.complete_dos
+# dos.densities = dos.get_smeared_densities(0.1)
+
+# x = dos.energies - dos.efermi
+# y = dos.get_densities()
+# plt.plot(x, y, color="k")
+# plt.xlabel("E - Ef (eV)")
+# plt.ylabel("DOS (a.u.)")
+# plt.show()
+
+
+data = parseACFdat(slab)
+print(data)
+
+avgs = {}
+for key in data.keys():
+    item = data[key]
+    avgs[key] = sum(item) / len(item)
+
+print(avgs)
 
 
 print("----done----")
