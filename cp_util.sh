@@ -41,12 +41,17 @@ find "$SOURCE_DIR" -type f -name "$FILE_TYPE" | while read -r FILE; do
     echo "Copied $FILE to $DEST_DIR/$RELATIVE_PATH"
 done
 
-# Zip the destination directory and remove the original directory
-zip -r "${DEST_DIR}.zip" "$DEST_DIR"
-rm -rf "$DEST_DIR"
+# Ask the user if they want to zip the folder
+read -p "Do you want to zip the folder? (yes/no): " RESPONSE
+
+if [[ "$RESPONSE" == "yes" || "$RESPONSE" == "y" ]]; then
+    # Zip the destination directory
+    zip -r "${DEST_DIR}.zip" "$DEST_DIR"
+    echo "Zip file location: ${PWD}/${DEST_DIR}.zip"
+    # Remove the original directory
+    rm -rf "$DEST_DIR"
+else
+    echo "The folder was not zipped. The folder has been left in its current location."
+fi
 
 echo "done"
-echo "Zip file location: ${PWD}/${DEST_DIR}.zip"
-
-
-
